@@ -20,9 +20,12 @@ class Item:
         self.item_enabled = bool(info[4])
         self.needs_reordered = bool(info[5])
 
-    def export(self):
-        export_data[self.item_id] = {"name": self.item_name, "Quantity": self.item_amount, "Threshold": self.item_min_amount, "Enabled": self.item_enabled, "Reorder": self.needs_reordered}
+    #def export(self):
+    #    [self.item_id] = {"name": self.item_name, "Quantity": self.item_amount, "Threshold": self.item_min_amount, "Enabled": self.item_enabled, "Reorder": self.needs_reordered}
 
+def errorOut(msg):
+    print(f"{msg} Please contact your administrator")
+    exit()
 
 def YES_NO():
     affirmative = ["", "yes", "y"]
@@ -43,6 +46,12 @@ def YES_NO():
         else:
             print("That doesn't appear to be a valid response. Please try again.")
 
+def removeCount(item, amount):
+    print("Stub!")
+
+def addCount(item, amount):
+    print("Stub!")
+
 def addItem(force=False):
     if os.path.isfile(SAVE_DATA_FILE) and not force:
         items = loadInv()
@@ -56,7 +65,8 @@ def addItem(force=False):
     item_amount = input("How many do you have on hand? -> ")
     item_min_amount = input("What is the minimum amount allowed before restock? -> ")
 
-    item = Item([item_number, item_name, item_amount, item_min_amount, False])
+
+    item = Item([item_number, item_name, item_amount, item_min_amount, True, False])
     with open(SAVE_DATA_FILE, 'a') as save_file:
         save_file.write(str(item))
         print("Item saved successfully.")
@@ -65,11 +75,11 @@ def initialize():
     try:
         os.mkdir(SAVE_DATA_FOLDER)
     except PermissionError:
-        print(f"It appears you do not have appropriate permissions to {SAVE_DATA_FOLDER}. Please contact your administrator.")
+        errorOut(f"It appears you do not have appropriate permissions to {SAVE_DATA_FOLDER}.")
     except FileExistsError:
         print("Folder already exists. Moving to save file.")
     print("Please create an item to initialize the database.")
-    addItem()
+    addItem(True)
 
 def loadInv():
     print("Attempting to load items")
@@ -90,12 +100,15 @@ def loadInv():
 
 def itemEditor(item_to_edit):
     print(f"Existing info:\n\tName: {item_to_edit.item_name}\n\tQTY: {item_to_edit.item_amount}")
-    menu = ["Remove one", "Remove more than one", "Add one", "Add more than one"]
+    menu = {"Remove one": removeCount(item_to_edit.item_amount, 1), "Add one": addCount(item_to_edit.item_amount, 1)}
 
     if item_to_edit.item_amount <= item_to_edit.item_min_amount:
         print("Alert! This item should be reordered!")
-        menu.append("Mark as reordered")
-    print("Options:\n\t1. Remove one\n\t2. Remove more than one\n\t3. ")
+        menu.append({"Mark as reordered": toggle_reorder()})
+    number = 1
+    for menu_item in menu_items.keys():
+        print(menu_item)
+        number += 1
 
 def invMan():
     if not os.path.isdir(SAVE_DATA_FOLDER) or not os.path.isfile(SAVE_DATA_FILE):
