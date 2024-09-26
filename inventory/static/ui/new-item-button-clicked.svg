@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="96"
+   height="48"
+   viewBox="0 0 25.4 12.7"
+   version="1.1"
+   id="svg1"
+   inkscape:version="1.3.2 (091e20ef0f, 2023-11-25)"
+   sodipodi:docname="new-item-button-clicked.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#505050"
+     bordercolor="#ffffff"
+     borderopacity="1"
+     inkscape:showpageshadow="0"
+     inkscape:pageopacity="0"
+     inkscape:pagecheckerboard="1"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="mm"
+     inkscape:zoom="8.2041846"
+     inkscape:cx="41.442266"
+     inkscape:cy="19.624132"
+     inkscape:window-width="2560"
+     inkscape:window-height="1012"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs1" />
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <rect
+       style="fill:#aa8800;stroke:#806600;stroke-width:0.604763;stroke-linecap:square;stroke-linejoin:round"
+       id="rect1"
+       width="24.685547"
+       height="12.089726"
+       x="0.41207096"
+       y="0.30789199"
+       ry="9.0784759e-08" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4.99793px;font-family:'Lapsus Pro';-inkscape-font-specification:'Lapsus Pro, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#aa8800;stroke:#a0892c;stroke-width:0.624741;stroke-linecap:square;stroke-linejoin:round"
+       x="2.0530624"
+       y="8.2725019"
+       id="text2"><tspan
+         sodipodi:role="line"
+         id="tspan2"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4.99793px;font-family:'Lapsus Pro';-inkscape-font-specification:'Lapsus Pro, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#aa8800;stroke:none;stroke-width:0.624741"
+         x="2.0530624"
+         y="8.2725019">NEW ITEM</tspan></text>
+    <path
+       style="font-size:4.99793px;font-family:'Lapsus Pro';-inkscape-font-specification:'Lapsus Pro, Normal';fill:#806600;stroke-width:0.624741;stroke-linecap:square;stroke-linejoin:round"
+       d="M 4.7714802,4.6117275 Q 4.4371461,7.9575098 4.3761362,8.1161355 H 3.726991 L 2.9363028,6.7299908 2.7947599,8.1161355 H 1.9162175 Q 1.9064559,6.8056431 2.043118,4.7459493 h 0.8516981 l 0.5588506,1.1079395 0.3245726,-1.166509 z m 2.7283623,0 -0.1146986,0.993241 -1.4764393,0.1366621 0.046367,0.3196918 1.0249661,-0.031725 -0.078093,0.6711088 -0.8809828,0.070771 0.036606,0.3807017 1.4642373,-0.095175 -0.1488641,0.968837 q -0.00732,0.046368 -2.3354585,0.090295 L 4.7129108,4.8191611 Z m 1.0518102,0 L 9.1471092,6.317564 9.5058473,5.9417431 9.781612,6.398097 10.14035,4.8313631 11.150674,5.3853329 10.399032,8.1136951 H 9.6059035 L 9.4497182,7.5694869 9.1300264,8.1161355 H 8.4564772 L 7.4217495,5.1486145 Z m 5.6080293,0 0.08541,0.9859198 q -0.261122,-0.019523 -0.507602,-0.019523 l 0.07565,1.6082207 0.507602,0.056129 -0.100056,0.888304 h -1.896187 l -0.05613,-0.8639001 0.483198,-0.080533 V 5.5561606 l -0.441712,0.024404 0.11958,-0.9078271 z m 2.701517,-0.012202 q 0.109818,0.5808142 0.175709,1.0371681 -0.461235,-0.019523 -0.841937,-0.019523 0.04149,1.4398333 0,2.4892034 h -0.902946 q -0.07809,-0.629622 -0.05857,-2.1158229 l -0.0049,-0.3660594 q -0.42951,0 -0.895625,0.036606 0.06589,-0.6442644 0.156185,-1.0420489 0.998122,-0.019523 2.372064,-0.019523 z m 2.89675,0.012202 -0.114699,0.993241 -1.476439,0.1366621 0.04637,0.3196918 1.024966,-0.031725 -0.07809,0.6711088 -0.880983,0.070771 0.03661,0.3807017 1.464237,-0.095175 -0.148864,0.968837 q -0.0073,0.046368 -2.335458,0.090295 L 16.971017,4.8191611 Z m 0.695513,0.00244 h 0.641824 l 0.424629,0.7882478 0.356298,-0.7882478 h 0.68087 L 23.484433,7.310805 22.381375,8.0307216 21.86157,6.5640439 21.541879,7.0252787 21.200223,6.6030903 20.819521,8.1063739 19.69938,7.5060366 Z"
+       id="text1"
+       aria-label="NEW ITEM" />
+  </g>
+</svg>

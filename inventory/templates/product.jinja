@@ -1,45 +1,77 @@
 {% extends 'base-template.jinja' %}
 {% block content %}
 <div class="container">
+    <div name="create-button">
+        <button class="btn btn-success" value="create" data-toggle="modal" data-target="#create">Add New</button>
+        <div id="create" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="trans_message" aria-hidden="true">
+            <form action = "{{ url_for('product') }}" method = "POST">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+
+                        <div class="modal-body" title="The name of the product">
+                            Name<span class="required">*</span>: <input name="prod_name" placeholder="Product Name" required autofocus>
+                        </div>
+                        <div class="modal-body" title="The current amount in stock">
+                            Amount<span class="required">*</span>: <input name="prod_quantity" placeholder="Current On Hand" type="number" required>
+                        </div>
+                        <div class="modal-body" title="How much should be left onhand before reorder">
+                            Reorder At<span class="required">*</span>: <input name="prod_reorder" placeholder="When to reorder" type="number" required>
+                        </div>
+                        <div class="modal-body" title="How much comes in a box from the vendor">
+                            Reorder Amount: <input name="reorder_qty" placeholder="Amount in Box" type="number">
+                        </div>
+                        <div class="modal-footer">
+                            <span id="modal-disclaimer">Items marked with asterisk (<span class="required">*</span>) are required</span>
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                            <button type="submit" class="btn btn-primary">Create</button>
+                        </div>
+                    </div>
+                </form>
+        </div>
+    </div>
     <table class="table">
         <thead>
             <th scope="col">Product ID</th>
             <th scope="col">Product Name</th>
             <th scope="col">Quantity</th>
+            <th scope="col">Minimum</th>
+            <th scope="col">Reorder</th>
         </thead>
         <tbody>
             {% for product in products %}
+                {# Set data we may need into easy-to-use variables #}
+                {% set prod_id        = product[0] %}
+                {% set prod_name      = product[1] %}
+                {% set prod_qty       = product[2] %}
+                {% set min_qty        = product[3] %}
+                {% set reorder_qty    = product[4] %}
+                {% set been_reordered = product[5] %}
+
+                {% set need_reordered = "No" %}
+                {% if prod_qty < min_qty and been_reordered == 0 %}
+                    {% set need_reordered = "Yes" %}
+                {% endif %}
+
+                {% set unhooked_id = prod_id + 100 %}
                 <tr>
-                    <td>{{ product[0] }}</td><td>{{ product[1] }}</td><td>{{ product[2] }}</td>
+                    <td>{{ unhooked_id }}</td><td>{{ product[1] }}</td><td>{{ product[2] }}</td><td>{{ product[3] }}</td><td>{{ need_reordered }}</td>
                     <td>
                         <a href="{{ url_for('delete', prod_id=product[0], type='product') }}">
-                            <button name="button" type="button" class="btn btn-danger" value= "delete" >delete</button><br>
+                            <button name="button" type="button" class="btn btn-danger" value="delete" >delete</button><br>
                         </a>
                     </td>
                     <td>
-                        <button name="button" type="button" class="btn btn-success" value= "edit" data-toggle="modal" data-target="#edit_{{ product[0] }}" >edit</button><br>
-                        <div id="edit_{{ product[0] }}" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="trans_message" aria-hidden="true">
+                        <button name="button" type="button" class="btn btn-success" value= "edit" data-toggle="modal" data-target="#edit_{{ prod_id }}" >edit</button><br>
+                        <div id="edit_{{ prod_id }}" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="trans_message" aria-hidden="true">
                             <form action="{{ url_for('edit', type='product') }}" method="post" class="base_form">
                             <div class="modal-dialog" role="document">
                                 <div class="modal-content">
-                                    <div class="modal-body"><input name="prod_name" placeholder="{{ product[1] }}"></div>
+                                    <div class="modal-body">Name: <input name="prod_name" placeholder="{{ product[1] }}"></div>
                                     <div class="modal-body">
-                                        <input name="prod_quantity" placeholder="{{ product[2] }}" id="input_{{ product[0] }}" type="number">
-                                        <script>
-                                            document.getElementById("input_{{ product[0] }}").oninput = function(){
-                                                let all = document.getElementsByClassName("btn btn-primary");
-                                                for(let i=0;i<all.length;i++){
-                                                    all[i].disabled = true;
-                                                }
-                                                let in_qty = parseInt(document.getElementById("input_{{ product[0] }}").value);
-                                                if (in_qty > {{ product[2] }}){
-                                                    for(let i=0;i<all.length;i++){
-                                                        all[i].disabled = false;
-                                                    }
-                                                }
-                                            };
-                                        </script>
-                                        <text class="font-weight-light">(only increase count)</text>
+                                        Amount: <input name="prod_quantity" placeholder="{{ product[2] }}" id="input_{{ product[0] }}" type="number">
+                                    </div>
+                                    <div class = "modal-body">
+                                        Reorder At: <input name="prod_reorder" placeholder="{{ product[3] }}" id="input_{{ product[0]}}" type="number">
                                     </div>
                                     <div class="modal-footer">
                                         <input name="prod_id" value="{{ product[0] }}" hidden aria-hidden="true">
@@ -54,14 +86,6 @@
                 </tr>
             {% endfor %}
             <!-- Inserting data -->
-            <tr>
-                <form action = "{{ url_for('product') }}" method = "POST">
-                    <td></td>
-                    <td><input name = "prod_name" placeholder="Product Name" required autofocus></td>
-                    <td><input name = "prod_quantity" placeholder="Quantity" required></td>
-                    <td><input type= "submit" class="btn btn-info btn-group-toggle" value= "submit" /><br></td>
-                </form>
-            </tr>
         </tbody>
     </table>
 </div>

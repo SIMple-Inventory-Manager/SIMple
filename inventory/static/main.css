@@ -1,0 +1,12 @@
+button .subtract{
+    background-image= url("ui/minus-button.svg")
+}
+
+#modal-disclaimer {
+    font-style: italic;
+    font-size: .8em;
+}
+
+.required {
+    color: red;
+}

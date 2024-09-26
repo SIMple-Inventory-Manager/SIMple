@@ -13,8 +13,6 @@ _DATABASE_PATH = Path(__file__).parent.parent / DATABASE_NAME
 VIEWS = {
     "Summary": "/",
     "Stock": "/product",
-    "Warehouses": "/location",
-    "Logistics": "/movement",
 }
 EMPTY_SYMBOLS = {"", " ", None}
 
@@ -33,7 +31,10 @@ def init_database():
         "prod_id INTEGER PRIMARY KEY AUTOINCREMENT, "
         "prod_name TEXT UNIQUE NOT NULL, "
         "prod_quantity INTEGER NOT NULL, "
-        "unallocated_quantity INTEGER)"
+        "prod_reorder INTEGER NOT NULL, "
+        "reorder_qty INTEGER, "
+        "been_reordered INTEGER, " # BOOL
+        "unallocated_quantity INTEGER)" # BOOL
     )
     LOCATIONS = "location(loc_id INTEGER PRIMARY KEY AUTOINCREMENT, loc_name TEXT UNIQUE NOT NULL)"
     LOGISTICS = (
@@ -52,11 +53,6 @@ def init_database():
     with sqlite3.connect(DATABASE_NAME) as conn:
         for table_definition in [PRODUCTS, LOCATIONS, LOGISTICS]:
             conn.execute(f"CREATE TABLE IF NOT EXISTS {table_definition}")
-        conn.execute(
-            "CREATE TRIGGER IF NOT EXISTS default_prod_qty_to_unalloc_qty "
-            "AFTER INSERT ON products FOR EACH ROW WHEN NEW.unallocated_quantity IS NULL "
-            "BEGIN UPDATE products SET unallocated_quantity = NEW.prod_quantity WHERE rowid = NEW.rowid; END"
-        )
 
 
 app.init_db = init_database
@@ -68,7 +64,7 @@ def summary():
         warehouse = conn.execute("SELECT * FROM location").fetchall()
         products = conn.execute("SELECT * FROM products").fetchall()
         q_data = conn.execute(
-            "SELECT prod_name, unallocated_quantity, prod_quantity FROM products"
+            "SELECT prod_name, unallocated_quantity, prod_quantity, prod_reorder, reorder_qty, been_reordered FROM products"
         ).fetchall()
 
     return render_template(
@@ -85,13 +81,13 @@ def summary():
 def product():
     with sqlite3.connect(DATABASE_NAME) as conn:
         if request.method == "POST":
-            prod_name, quantity = request.form["prod_name"], request.form["prod_quantity"]
-            transaction_allowed = prod_name not in EMPTY_SYMBOLS and quantity not in EMPTY_SYMBOLS
+            prod_name, quantity, reorder, reorder_qty = request.form["prod_name"], request.form["prod_quantity"], request.form["prod_reorder"], request.form["reorder_qty"]
+            transaction_allowed = prod_name not in EMPTY_SYMBOLS and quantity not in EMPTY_SYMBOLS and reorder not in EMPTY_SYMBOLS
 
             if transaction_allowed:
                 conn.execute(
-                    "INSERT INTO products (prod_name, prod_quantity) VALUES (?, ?)",
-                    (prod_name, quantity),
+                    "INSERT INTO products (prod_name, prod_quantity, prod_reorder, reorder_qty) VALUES (?, ?, ?, ?)",
+                    (prod_name, quantity, int(reorder), int(reorder_qty)),
                 )
                 return redirect(VIEWS["Stock"])
 
@@ -287,6 +283,20 @@ def delete():
             case _:
                 return redirect(VIEWS["Summary"])
 
+#@app.route("/quick-change", methods=["POST"])
+#def quick_change():
+#    quick_change_type = request.args.get("type")
+
+#    with sqlite3.connect(DATABASE_NAME) as conn:
+#        match quick_change_type:
+#            case subtract:
+#                prod_id, prod_name, prod_quantity = (
+#                   request.form["prod_id"],
+#                   request.form["prod_name"],
+#                   request.form["prod_quantity"]
+#                   )
+
+
 
 @app.route("/edit", methods=["POST"])
 def edit():
@@ -303,10 +313,11 @@ def edit():
                 return redirect(VIEWS["Warehouses"])
 
             case "product":
-                prod_id, prod_name, prod_quantity = (
+                prod_id, prod_name, prod_quantity, prod_reorder = (
                     request.form["prod_id"],
                     request.form["prod_name"],
                     request.form["prod_quantity"],
+                    request.form["prod_reorder"]
                 )
 
                 if prod_name:
@@ -321,6 +332,14 @@ def edit():
                     conn.execute(
                         "UPDATE products SET prod_quantity = ?, unallocated_quantity =  unallocated_quantity + ? - ? WHERE prod_id = ?",
                         (prod_quantity, prod_quantity, old_prod_quantity, prod_id),
+                    )
+                if prod_reorder:
+                    old_prod_quantity = conn.execute(
+                            "SELECT prod_reorder FROM products WHERE prod_id = ?", (prod_id,)
+                    ).fetchone()[0]
+                    conn.execute(
+                            "UPDATE products SET prod_reorder = ? WHERE prod_id = ?",
+                            (int(prod_reorder), prod_id),
                     )
 
                 return redirect(VIEWS["Stock"])
