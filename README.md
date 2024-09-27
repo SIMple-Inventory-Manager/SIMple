@@ -1,6 +1,8 @@
-# Inventory Management System
+# SIMple (Simple Inventory Management)
+*"A Simple Inventory Management System powered by Flask"*
 
-*"Simple Inventory Management System powered by Flask"*
+<span style="font-size:.8em;font-style:italic;font-color:blue;">Much of this code has been modified from [Inventory Management System](https://github.com/gavindsouza/inventory-management-system), copied and modied under the MIT license.</span>
+
 
 ## Table of Contents
 
@@ -21,8 +23,8 @@
 Clone the git repository:
 
 ``` sourceCode console
-$ git clone https://github.com/gavindsouza/inventory-management-system.git
-$ cd inventory-management-system
+$ git clone https://github.com/RiderExMachina/SIMple.git
+$ cd SIMple
 ```
 ![](docs/util/1.gif)
 
