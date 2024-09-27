@@ -48,11 +48,11 @@
                 {% set been_reordered = product[5] %}
 
                 {% set need_reordered = "No" %}
-                {% if prod_qty < min_qty and been_reordered == 0 %}
+                {% if prod_qty < min_qty %}
                     {% set need_reordered = "Yes" %}
                 {% endif %}
 
-                {% set unhooked_id = prod_id + 100 %}
+                {% set unhooked_id = products.index(product)+1 %}
                 <tr>
                     <td>{{ unhooked_id }}</td><td>{{ product[1] }}</td><td>{{ product[2] }}</td><td>{{ product[3] }}</td><td>{{ need_reordered }}</td>
                     <td>

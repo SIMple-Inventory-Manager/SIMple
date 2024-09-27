@@ -1,42 +1,91 @@
 {% extends 'base-template.jinja' %}
 {% block content %}
     <div class="container" style="float: contour;" align="center">
-    <h3 align="center">Summary</h3>
-        <div class="form-horizontal" title="Summary">
+    <h3 align="center">Items</h3>
+        <div class="form-horizontal" title="Item list">
         {% if not summary %}
-        <h3 align="center" class="font-weight-light">No Available Products</h3>
+            <h3 align="center" class="font-weight-light">No Items</h3>
         {% else %}
-        <div>
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th scope="col">Product</th>
-                        <th scope="col">Quantity</th>
-                        <th scope="col">Quick Actions</th>
-                        <th>Reorder?</th>
-                    </tr>
-                </thead>
-                <thead>
-                    {% for data in products %}
-                        {# Set data we may need into easy-to-use variables #}
-                        {% set prod_id        = data[0] %}
-                        {% set prod_name      = data[1] %}
-                        {% set prod_qty       = data[2] %}
-                        {% set min_qty        = data[3] %}
-                        {% set reorder_qty    = data[4] %}
-                        {% set been_reordered = data[5] %}
+        <div id="item-buttons">
 
-                        {% set need_reordered = "No" %}
-                        {% if prod_qty < min_qty %}
-                            {% set need_reordered = "Yes <input type='checkbox' id='reorder_" + prod_id|string + "'>" %}
-                        {% endif %}
-                    <script>console.log({{data[3]}})</script>
-                    <tr><td>{{ data[0] }}</td><td>{{ data[1] }}</td><td><button class="btn btn-danger" value="quick_subtract" data-target="#quick_remove_{{prod_id}}">-</button>&nbsp;&nbsp;&nbsp;<button class="btn btn-success" value="quick_add" data_target="#quick_add_{{prod_id}}">+</button></td><td>{{ need_reordered}}</td></tr>
-                    {% endfor %}
-                </thead>
-            </table>
+            {% for product in products %}
+                {% set prod_num = products.index(product)+1 %}
+
+                {# Set data we may need into easy-to-use variables #}
+                {% set prod_id        = product[0] %}
+                {% set prod_name      = product[1] %}
+                {% set prod_qty       = product[2] %}
+                {% set min_qty        = product[3] %}
+                {% set reorder_qty    = product[4] %}
+                {% set been_reordered = product[5] %}
+
+                {% if prod_qty >= min_qty %}
+                    {% set need_reorder = "" %}
+                    {% set state="stocked" %}
+                {% elif prod_qty < min_qty %}
+                    {% set need_reordered = "Please Reorder" %}
+
+                    {% if prod_qty <= (min_qty/2) %}
+                        {% set state="warning" %}
+                    {% else %}
+                        {% set state="low" %}
+                    {% endif %}
+                {% elif been_reordered %}
+                    {% set need_reordered = "Reorder In Process" %}
+                {% elif prod_qty == 0 %}
+                    {% set state="out" %}
+                {% endif %}
+                {% if prod_num // 4 %}
+                    {% set newline="<br/>" %}
+                {% else %}
+                    {% set newline = "" %}
+                {% endif %}
+
+                <button class="btn item-btn {{ state }}" id="btn-{{prod_id}}" data-toggle="modal" data-target="#edit_{{ prod_id }}">{{ prod_name }}<br/> ({{prod_qty}})</button>{{ newline }}
+
+                <div id="edit_{{ prod_id }}" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="trans_message" aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-body"><h3>{{ prod_name }}</h3></div>
+                        <div class="modal-body"><h4>On hand: {{ prod_qty }} - Reorder Amount: {{ reorder_qty }}</h4></div>
+                        <div class="modal-body">{{ need_reordered }} </div>
+                        <div class="modal-body">
+                        <div align="left">
+                            <a href="{{ url_for('quick_change', product=prod_id, type='subtract', qty=1) }}">
+                                <button name="single-quick" class="btn btn-danger" value="subtract-one">Take 1</button>
+                            </a><br/>
+                                <a href="{{ url_for('quick_change', product=prod_id, type='subtract', qty=3) }}">
+                                <button name="single-quick" class="btn btn-danger" value="subtract-three">Take 3</button>
+                            </a><br/>
+                            <a href="{{ url_for('quick_change', product=prod_id, type='subtract', qty=5) }}">
+                                <button name="single-quick" class="btn btn-danger" value="subtract-three">Take 5</button>
+                            </a>
+                        </div>
+                        <div align="right">
+                            <a href="{{ url_for('quick_change', product=prod_id, type='add', qty=1) }}">
+                                <button name="single-quick" class="btn btn-success" value="add-one">Add 1</button>
+                            </a><br/>
+                                <a href="{{ url_for('quick_change', product=prod_id, type='add', qty=3) }}">
+                                <button name="single-quick" class="btn btn-success" value="add-three">Add 3</button>
+                            </a><br/>
+                            <a href="{{ url_for('quick_change', product=prod_id, type='add', qty=5) }}">
+                                <button name="single-quick" class="btn btn-success" value="add-five">Add 5</button>
+                            </a>
+                        </div>
+                        </div>
+                        <div class="modal-body">
+                            <a href="{{ url_for('quick_change', product=prod_id, type='add', qty=reorder_qty) }}"
+                                <button name="restock" class="btn btn-primary" value="full-restock">Restock</button>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+
+                </div>
+        {% endfor %}
         </div>
-        {% endif %}
-        </div>
+    {% endif %}
     </div>
+</div>
 {% endblock %}

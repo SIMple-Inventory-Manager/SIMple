@@ -1,4 +1,4 @@
-button .subtract{
+.subtract{
     background-image= url("ui/minus-button.svg")
 }
 
@@ -9,4 +9,45 @@ button .subtract{
 
 .required {
     color: red;
+}
+
+/* Custom item buttons */
+.item-btn {
+    min-height: 5em;
+    min-width: 10em;
+    margin: .5em;
+    font-size: 1.2em;
+}
+
+.stocked{
+    background-color: #008000;
+    color: white;
+}
+
+.stocked:hover {
+    background-color: #005500;
+}
+
+.low{
+    background-color: #ffff00;
+}
+
+.low:hover{
+    background-color: #cccc00;
+}
+
+.warning{
+    background-color: #ff6600;
+}
+
+.warning:hover{
+    background-color: #d45500;
+}
+
+.out{
+    background-color: #ff0000;
+}
+
+.out:hover{
+    background-color: #d40000;
 }

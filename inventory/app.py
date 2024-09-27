@@ -283,18 +283,32 @@ def delete():
             case _:
                 return redirect(VIEWS["Summary"])
 
-#@app.route("/quick-change", methods=["POST"])
-#def quick_change():
-#    quick_change_type = request.args.get("type")
+@app.route("/quick-change", methods=["GET", "POST"])
+def quick_change():
+    quick_change_type = request.args.get("type")
+    prod_id, qty = (
+        request.args.get("product"),
+        request.args.get("qty")
+    )
+    qty = int(qty)
 
-#    with sqlite3.connect(DATABASE_NAME) as conn:
-#        match quick_change_type:
-#            case subtract:
-#                prod_id, prod_name, prod_quantity = (
-#                   request.form["prod_id"],
-#                   request.form["prod_name"],
-#                   request.form["prod_quantity"]
-#                   )
+    with sqlite3.connect(DATABASE_NAME) as conn:
+        old_prod_quantity = conn.execute(
+                "SELECT prod_quantity FROM products WHERE prod_id = ?", (prod_id,)
+            ).fetchone()[0]
+        match quick_change_type:
+            case "subtract":
+                new_qty = old_prod_quantity - qty
+                print(f"Will take away {qty} from {old_prod_quantity} for updated {new_qty}")
+            case "add":
+                new_qty = old_prod_quantity + qty
+                print(f"Will add {qty} to {old_prod_quantity} for updated {new_qty}")
+        conn.execute(
+                "UPDATE products SET prod_quantity = ? WHERE prod_id = ?",
+                (new_qty,  prod_id),
+            )
+        return redirect(VIEWS["Summary"])
+
 
 
 
