@@ -17,6 +17,7 @@
     min-width: 10em;
     margin: .5em;
     font-size: 1.2em;
+    border: 1px solid black;
 }
 
 .stocked{
