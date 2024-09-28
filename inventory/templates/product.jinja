@@ -1,13 +1,16 @@
 {% extends 'base-template.jinja' %}
 {% block content %}
 <div class="container">
+    <h3 align-"center">Inventory</h3>
+    <hr>
     <div name="create-button">
         <button class="btn btn-success" value="create" data-toggle="modal" data-target="#create">Add New</button>
+    </div>
         <div id="create" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="trans_message" aria-hidden="true">
             <form action = "{{ url_for('product') }}" method = "POST">
                 <div class="modal-dialog" role="document">
-                    <div class="modal-content">
-
+                    <div class="modal-content new-item">
+                        <h3 align="center">New Item</h3>
                         <div class="modal-body" title="The name of the product">
                             Name<span class="required">*</span>: <input name="prod_name" placeholder="Product Name" required autofocus>
                         </div>
