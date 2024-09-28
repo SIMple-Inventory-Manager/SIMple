@@ -13,6 +13,8 @@ _DATABASE_PATH = Path(__file__).parent.parent / DATABASE_NAME
 VIEWS = {
     "Summary": "/",
     "Stock": "/product",
+    "Locations": "/location",
+    "Settings": "/settings"
 }
 EMPTY_SYMBOLS = {"", " ", None}
 
@@ -30,11 +32,17 @@ def init_database():
         "products("
         "prod_id INTEGER PRIMARY KEY AUTOINCREMENT, "
         "prod_name TEXT UNIQUE NOT NULL, "
+        "prod_upc TEXT UNIQUE NOT NULL, "
         "prod_quantity INTEGER NOT NULL, "
+        "quick_take_qty INTEGER NOT NULL, "
         "prod_reorder INTEGER NOT NULL, "
         "reorder_qty INTEGER, "
         "been_reordered INTEGER, " # BOOL
-        "unallocated_quantity INTEGER)" # BOOL
+        "vendor TEXT, "
+        "vendor_url TEXT, "
+        "purchase_cost INTEGER, "
+        "sale_price INTEGER, "
+        "unallocated_quantity INTEGER)"
     )
     LOCATIONS = "location(loc_id INTEGER PRIMARY KEY AUTOINCREMENT, loc_name TEXT UNIQUE NOT NULL)"
     LOGISTICS = (
@@ -49,6 +57,11 @@ def init_database():
         "FOREIGN KEY(from_loc_id) REFERENCES location(loc_id), "
         "FOREIGN KEY(to_loc_id) REFERENCES location(loc_id))"
     )
+    CATEGORIES = (
+        "categories=("
+        "cat_id INTEGER PRIMARY KEY AUTOINCREMENT, "
+        "category_name TEXT UNIQUE NOT NULL) "
+        )
 
     with sqlite3.connect(DATABASE_NAME) as conn:
         for table_definition in [PRODUCTS, LOCATIONS, LOGISTICS]:
@@ -62,7 +75,7 @@ app.init_db = init_database
 def summary():
     with sqlite3.connect(DATABASE_NAME) as conn:
         warehouse = conn.execute("SELECT * FROM location").fetchall()
-        products = conn.execute("SELECT * FROM products").fetchall()
+        products = conn.execute("SELECT * FROM products ORDER BY prod_name ASC").fetchall()
         q_data = conn.execute(
             "SELECT prod_name, unallocated_quantity, prod_quantity, prod_reorder, reorder_qty, been_reordered FROM products"
         ).fetchall()
@@ -109,7 +122,7 @@ def location():
 
             if warehouse_name not in EMPTY_SYMBOLS:
                 conn.execute("INSERT INTO location (loc_name) VALUES (?)", (warehouse_name,))
-                return redirect(VIEWS["Warehouses"])
+                return redirect(VIEWS["Locations"])
 
         warehouse_data = conn.execute("SELECT * FROM location").fetchall()
 
@@ -117,7 +130,7 @@ def location():
         "location.jinja",
         link=VIEWS,
         warehouses=warehouse_data,
-        title="Warehouses",
+        title="Locations",
     )
 
 

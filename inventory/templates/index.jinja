@@ -1,7 +1,7 @@
 {% extends 'base-template.jinja' %}
 {% block content %}
     <div class="container" style="float: contour;" align="center">
-    <h3 align="center">Items</h3>
+    <h3 align="center">Inventory</h3>
         <div class="form-horizontal" title="Item list">
         {% if not summary %}
             <h3 align="center" class="font-weight-light">No Items</h3>
@@ -50,32 +50,34 @@
                         <div class="modal-body"><h4>On hand: {{ prod_qty }} - Reorder Amount: {{ reorder_qty }}</h4></div>
                         <div class="modal-body">{{ need_reordered }} </div>
                         <div class="modal-body">
-                        <div align="left">
                             <a href="{{ url_for('quick_change', product=prod_id, type='subtract', qty=1) }}">
-                                <button name="single-quick" class="btn btn-danger" value="subtract-one">Take 1</button>
-                            </a><br/>
-                                <a href="{{ url_for('quick_change', product=prod_id, type='subtract', qty=3) }}">
-                                <button name="single-quick" class="btn btn-danger" value="subtract-three">Take 3</button>
-                            </a><br/>
-                            <a href="{{ url_for('quick_change', product=prod_id, type='subtract', qty=5) }}">
-                                <button name="single-quick" class="btn btn-danger" value="subtract-three">Take 5</button>
+                                <button name="single-quick" class="btn btn-danger" align="left" value="subtract-one">Take 1</button>
                             </a>
-                        </div>
-                        <div align="right">
                             <a href="{{ url_for('quick_change', product=prod_id, type='add', qty=1) }}">
-                                <button name="single-quick" class="btn btn-success" value="add-one">Add 1</button>
-                            </a><br/>
-                                <a href="{{ url_for('quick_change', product=prod_id, type='add', qty=3) }}">
-                                <button name="single-quick" class="btn btn-success" value="add-three">Add 3</button>
-                            </a><br/>
-                            <a href="{{ url_for('quick_change', product=prod_id, type='add', qty=5) }}">
-                                <button name="single-quick" class="btn btn-success" value="add-five">Add 5</button>
+                                <button name="single-quick" class="btn btn-success" align="right" value="add-one">Add 1</button>
                             </a>
-                        </div>
+                            <br/>
+                                <a href="{{ url_for('quick_change', product=prod_id, type='subtract', qty=3) }}">
+                                <button name="single-quick" class="btn btn-danger" align="left" value="subtract-three">Take 3</button>
+                            </a>
+                            <a href="{{ url_for('quick_change', product=prod_id, type='add', qty=3) }}">
+                                <button name="single-quick" class="btn btn-success" align="right" value="add-three">Add 3</button>
+                            </a>
+                            <br/>
+                            <a href="{{ url_for('quick_change', product=prod_id, type='subtract', qty=5) }}">
+                                <button name="single-quick" class="btn btn-danger" align="left" value="subtract-three">Take 5</button>
+                            <a href="{{ url_for('quick_change', product=prod_id, type='add', qty=5) }}">
+                                <button name="single-quick" class="btn btn-success" align="right" value="add-five">Add 5</button>
+                            </a>
+                            </a>
                         </div>
                         <div class="modal-body">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                        <a href="{{ url_for('quick_change', product=prod_id, type='add', qty=reorder_qty) }}"
+                                <button name="restock" class="btn btn-primary" value="full-restock">Reorder</button>
+                            </a>
                             <a href="{{ url_for('quick_change', product=prod_id, type='add', qty=reorder_qty) }}"
-                                <button name="restock" class="btn btn-primary" value="full-restock">Restock</button>
+                                <button name="restock" class="btn btn-secondary" value="full-restock">Restock</button>
                             </a>
                         </div>
                     </div>
