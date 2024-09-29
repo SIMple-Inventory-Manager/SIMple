@@ -11,18 +11,42 @@
                 <div class="modal-dialog" role="document">
                     <div class="modal-content new-item">
                         <h3 align="center">New Item</h3>
-                        <div class="modal-body" title="The name of the product">
-                            Name<span class="required">*</span>: <input name="prod_name" placeholder="Product Name" required autofocus>
+                        <div class="modal-body">
+                        <table>
+                            <tr>
+                                <td>Name<span class="required">*</span>:</td><td><input name="prod_name" placeholder="Product Name" required autofocus></td>
+                            </tr>
+                            <tr>
+                                <td>UPC:</td><td> <input name="prod_upc" placeholder="Item UPC"></td>
+                            </tr>
+                            <tr>
+                                <td>Amount<span class="required">*</span>:</td><td><input name="prod_quantity" placeholder="Current On Hand" type="number" required> </td>
+                            </tr>
+                            <tr>
+                                <td>Quick Take <span class="required">*</span>:</td><td><input name="quick_take_qty" placeholder="Amount to remove quickly" type="number" required></td>
+                            </tr>
+                            <tr>
+                                <td>Reorder At<span class="required">*</span>:</td><td><input name="prod_reorder" placeholder="When to reorder" type="number" required> </td>
+                            </tr>
+                            <tr>
+                                <td>Reorder Amount:</td><td><input name="reorder_qty" placeholder="Amount in Box" type="number"></td>
+                            </tr>
+                            <tr>
+                                <td>Location<span class="required">*</span>:</td><td>
+                                <select name="location">
+                                    <option value="stub">No locations available</option>
+                                </select></td>
+                            </tr>
+                           <tr>
+                                <td> Categories:</td><td>
+                                <select name="categories">
+                                    <option value="stub">No categories available</option>
+                                    <!-- https://www.geeksforgeeks.org/how-to-use-checkbox-inside-select-option-using-javascript/ -->
+                                </select></td>
+                            </tr>
+                            </table>
                         </div>
-                        <div class="modal-body" title="The current amount in stock">
-                            Amount<span class="required">*</span>: <input name="prod_quantity" placeholder="Current On Hand" type="number" required>
-                        </div>
-                        <div class="modal-body" title="How much should be left onhand before reorder">
-                            Reorder At<span class="required">*</span>: <input name="prod_reorder" placeholder="When to reorder" type="number" required>
-                        </div>
-                        <div class="modal-body" title="How much comes in a box from the vendor">
-                            Reorder Amount: <input name="reorder_qty" placeholder="Amount in Box" type="number">
-                        </div>
+                        <div id="extra-options" class="modal-body"></div>
                         <div class="modal-footer">
                             <span id="modal-disclaimer">Items marked with asterisk (<span class="required">*</span>) are required</span>
                             <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
