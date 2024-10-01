@@ -15,10 +15,14 @@
                 {# Set data we may need into easy-to-use variables #}
                 {% set prod_id        = product[0] %}
                 {% set prod_name      = product[1] %}
-                {% set prod_qty       = product[2] %}
-                {% set min_qty        = product[3] %}
-                {% set reorder_qty    = product[4] %}
-                {% set been_reordered = product[5] %}
+                {% set prod_upc       = product[2] %}
+                {% set prod_qty       = product[3]|int %}
+                {% set quick_take_qty = product[4]|int %}
+                {% set min_qty        = product[5]|int %}
+                {% set reorder_qty    = product[6]|int %}
+                {% set location       = product[7] %}
+                {% set categories     = product[8] %}
+                {% set been_reordered = product[9] %}
 
                 {% if prod_qty >= min_qty %}
                     {% set need_reorder = "" %}

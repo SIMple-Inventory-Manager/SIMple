@@ -14,7 +14,7 @@ VIEWS = {
     "Summary": "/",
     "Stock": "/product",
     "Locations": "/location",
-    "Settings": "/settings"
+    #"Settings": "/settings"
 }
 EMPTY_SYMBOLS = {"", " ", None}
 
@@ -37,6 +37,8 @@ def init_database():
         "quick_take_qty INTEGER NOT NULL, "
         "prod_reorder INTEGER NOT NULL, "
         "reorder_qty INTEGER, "
+        "location TEXT NOT NULL, "
+        "categories TEXT, "
         "been_reordered INTEGER, " # BOOL
         "vendor TEXT, "
         "vendor_url TEXT, "
@@ -93,14 +95,47 @@ def summary():
 @app.route("/product", methods=["POST", "GET"])
 def product():
     with sqlite3.connect(DATABASE_NAME) as conn:
+        warehouse = conn.execute("SELECT * FROM location").fetchall()
+    
+
+    with sqlite3.connect(DATABASE_NAME) as conn:
         if request.method == "POST":
-            prod_name, quantity, reorder, reorder_qty = request.form["prod_name"], request.form["prod_quantity"], request.form["prod_reorder"], request.form["reorder_qty"]
-            transaction_allowed = prod_name not in EMPTY_SYMBOLS and quantity not in EMPTY_SYMBOLS and reorder not in EMPTY_SYMBOLS
+            (prod_name,
+            prod_upc,
+            quantity,
+            quick_take_qty, 
+            reorder_qty, 
+            restock_qty,
+            location,
+            categories) = (
+                        request.form["prod_name"], 
+                        request.form["prod_upc"],
+                        request.form["prod_quantity"], 
+                        request.form["quick_take_qty"],
+                        request.form["reorder_qty"], 
+                        request.form["restock_qty"],
+                        request.form["location"],
+                        request.form["categories"]
+                        )
+            ## Verify Data
+            transaction_allowed = True
+            try:
+                quantity = int(quantity)
+                quick_take_qty = int(quick_take_qty)
+                restock_qty = int(restock_qty)
+                reorder_qty = int(reorder_qty)
+            except ValueError:
+                print("Expected integer, did not recieve one.")
+                transaction_allowed = False
+            
+            for to_check in [prod_name, quantity, quick_take_qty, reorder_qty, restock_qty, location]:
+                if to_check in EMPTY_SYMBOLS:
+                    transaction_allowed = False
 
             if transaction_allowed:
                 conn.execute(
-                    "INSERT INTO products (prod_name, prod_quantity, prod_reorder, reorder_qty) VALUES (?, ?, ?, ?)",
-                    (prod_name, quantity, int(reorder), int(reorder_qty)),
+                    "INSERT INTO products (prod_name, prod_upc, prod_quantity, quick_take_qty, prod_reorder, reorder_qty, location, categories) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                    (prod_name, prod_upc, quantity, quick_take_qty, reorder_qty, restock_qty, location, categories),
                 )
                 return redirect(VIEWS["Stock"])
 
@@ -110,6 +145,7 @@ def product():
         "product.jinja",
         link=VIEWS,
         products=products,
+        locations=warehouse,
         title="Stock",
     )
 

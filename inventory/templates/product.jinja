@@ -14,27 +14,35 @@
                         <div class="modal-body">
                         <table>
                             <tr>
-                                <td>Name<span class="required">*</span>:</td><td><input name="prod_name" placeholder="Product Name" required autofocus></td>
+                                <td>Name:<span class="required">*</span></td><td><input name="prod_name" placeholder="Product Name" required autofocus></td>
                             </tr>
                             <tr>
                                 <td>UPC:</td><td> <input name="prod_upc" placeholder="Item UPC"></td>
                             </tr>
                             <tr>
-                                <td>Amount<span class="required">*</span>:</td><td><input name="prod_quantity" placeholder="Current On Hand" type="number" required> </td>
+                                <td>Amount:<span class="required">*</span></td><td><input name="prod_quantity" placeholder="Current On Hand" type="number" required> </td>
                             </tr>
                             <tr>
-                                <td>Quick Take <span class="required">*</span>:</td><td><input name="quick_take_qty" placeholder="Amount to remove quickly" type="number" required></td>
+                                <td>Quick Take:<span class="required">*</span></td><td><input name="quick_take_qty" placeholder="Amount to remove quickly" type="number" required></td>
                             </tr>
                             <tr>
-                                <td>Reorder At<span class="required">*</span>:</td><td><input name="prod_reorder" placeholder="When to reorder" type="number" required> </td>
+                                <td>Reorder At:<span class="required">*</span></td><td><input name="reorder_qty" placeholder="When to reorder" type="number" required> </td>
                             </tr>
                             <tr>
-                                <td>Reorder Amount:</td><td><input name="reorder_qty" placeholder="Amount in Box" type="number"></td>
+                                <td>Reorder Amount:</td><td><input name="restock_qty" placeholder="Amount in Box" type="number"></td>
                             </tr>
                             <tr>
-                                <td>Location<span class="required">*</span>:</td><td>
-                                <select name="location">
+                                <td>Location:<span class="required">*</span></td><td>
+                                <select name="location" required>
+                                {% if not locations %}
                                     <option value="stub">No locations available</option>
+                                {% else %}
+                                {% for location in locations %}
+                                        {% set location_id = location[0] %}
+                                        {%set location_name = location[1] %}
+                                        <option value="{{ location_id }}">{{location_name}}</option>
+                                {% endfor %}
+                                {% endif %}
                                 </select></td>
                             </tr>
                            <tr>
@@ -69,10 +77,14 @@
                 {# Set data we may need into easy-to-use variables #}
                 {% set prod_id        = product[0] %}
                 {% set prod_name      = product[1] %}
-                {% set prod_qty       = product[2] %}
-                {% set min_qty        = product[3] %}
-                {% set reorder_qty    = product[4] %}
-                {% set been_reordered = product[5] %}
+                {% set prod_upc       = product[2] %}
+                {% set prod_qty       = product[3]|int %}
+                {% set quick_take_qty = product[4]|int %}
+                {% set min_qty        = product[5]|int %}
+                {% set reorder_qty    = product[6]|int %}
+                {% set location       = product[7] %}
+                {% set categories     = product[8] %}
+                {% set been_reordered = product[9] %}
 
                 {% set need_reordered = "No" %}
                 {% if prod_qty < min_qty %}
@@ -81,7 +93,7 @@
 
                 {% set unhooked_id = products.index(product)+1 %}
                 <tr>
-                    <td>{{ unhooked_id }}</td><td>{{ product[1] }}</td><td>{{ product[2] }}</td><td>{{ product[3] }}</td><td>{{ need_reordered }}</td>
+                    <td>{{ unhooked_id }}</td><td>{{ prod_name }}</td><td>{{ prod_qty }}</td><td>{{ min_qty }}</td><td>{{ need_reordered }}</td>
                     <td>
                         <a href="{{ url_for('delete', prod_id=product[0], type='product') }}">
                             <button name="button" type="button" class="btn btn-danger" value="delete" >delete</button><br>
