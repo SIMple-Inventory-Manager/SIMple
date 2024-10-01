@@ -48,8 +48,14 @@
                            <tr>
                                 <td> Categories:</td><td>
                                 <select name="categories">
+                                {% if not categories %}
                                     <option value="stub">No categories available</option>
                                     <!-- https://www.geeksforgeeks.org/how-to-use-checkbox-inside-select-option-using-javascript/ -->
+                                {% else %}
+                                {% for category in categories %}
+                                    <option value="{{ category[0] }}"> {{ category[1] }}</option>
+                                {% endfor %}
+                                {% endif %}}
                                 </select></td>
                             </tr>
                             </table>
@@ -95,7 +101,7 @@
                 <tr>
                     <td>{{ unhooked_id }}</td><td>{{ prod_name }}</td><td>{{ prod_qty }}</td><td>{{ min_qty }}</td><td>{{ need_reordered }}</td>
                     <td>
-                        <a href="{{ url_for('delete', prod_id=product[0], type='product') }}">
+                        <a href="{{ url_for('delete', prod_id=prod_id, type='product') }}">
                             <button name="button" type="button" class="btn btn-danger" value="delete" >delete</button><br>
                         </a>
                     </td>
@@ -105,15 +111,15 @@
                             <form action="{{ url_for('edit', type='product') }}" method="post" class="base_form">
                             <div class="modal-dialog" role="document">
                                 <div class="modal-content">
-                                    <div class="modal-body">Name: <input name="prod_name" placeholder="{{ product[1] }}"></div>
+                                    <div class="modal-body">Name: <input name="prod_name" placeholder="{{ prod_name }}"></div>
                                     <div class="modal-body">
-                                        Amount: <input name="prod_quantity" placeholder="{{ product[2] }}" id="input_{{ product[0] }}" type="number">
+                                        Amount: <input name="prod_quantity" placeholder="{{ prod_qty }}" id="input_{{ prod_id }}" type="number">
                                     </div>
                                     <div class = "modal-body">
-                                        Reorder At: <input name="prod_reorder" placeholder="{{ product[3] }}" id="input_{{ product[0]}}" type="number">
+                                        Reorder At: <input name="prod_reorder" placeholder="{{ prod_reorder }}" id="input_{{ prod_id}}" type="number">
                                     </div>
                                     <div class="modal-footer">
-                                        <input name="prod_id" value="{{ product[0] }}" hidden aria-hidden="true">
+                                        <input name="prod_id" value="{{ prod_id }}" hidden aria-hidden="true">
                                         <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
                                             <button type="submit" class="btn btn-primary">Save changes</button>
                                     </div>
