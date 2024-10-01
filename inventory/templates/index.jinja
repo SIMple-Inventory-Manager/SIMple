@@ -1,0 +1,98 @@
+{% extends 'base-template.jinja' %}
+{% block content %}
+    <div class="container" style="float: contour;" align="center">
+    <h3 align="center">Inventory</h3>
+    <hr>
+        <div class="form-horizontal" title="Item list">
+        {% if not summary %}
+            <h3 align="center" class="font-weight-light">No Items</h3>
+        {% else %}
+        <div id="item-buttons">
+
+            {% for product in products %}
+                {% set prod_num = products.index(product)+1 %}
+
+                {# Set data we may need into easy-to-use variables #}
+                {% set prod_id        = product[0] %}
+                {% set prod_name      = product[1] %}
+                {% set prod_upc       = product[2] %}
+                {% set prod_qty       = product[3]|int %}
+                {% set quick_take_qty = product[4]|int %}
+                {% set min_qty        = product[5]|int %}
+                {% set reorder_qty    = product[6]|int %}
+                {% set location       = product[7] %}
+                {% set categories     = product[8] %}
+                {% set been_reordered = product[9] %}
+
+                {% if prod_qty >= min_qty %}
+                    {% set need_reorder = "" %}
+                    {% set state="stocked" %}
+                {% elif prod_qty < min_qty %}
+                    {% set need_reordered = "Please Reorder" %}
+
+                    {% if prod_qty == 0 %}
+                        {% set state="out" %}
+                    {% elif prod_qty <= (min_qty/2) %}
+                        {% set state="warning" %}
+                    {% else %}
+                        {% set state="low" %}
+                    {% endif %}
+                {% elif been_reordered %}
+                    {% set need_reordered = "Reorder In Process" %}
+                {% endif %}
+                {% if prod_num // 4 %}
+                    {% set newline="<br/>" %}
+                {% else %}
+                    {% set newline = "" %}
+                {% endif %}
+
+                <button class="btn item-btn {{ state }}" id="btn-{{prod_id}}" data-toggle="modal" data-target="#edit_{{ prod_id }}">{{ prod_name }}<br/> ({{prod_qty}})</button>{{ newline }}
+
+                <div id="edit_{{ prod_id }}" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="trans_message" aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-body"><h3>{{ prod_name }}</h3></div>
+                        <div class="modal-body"><h4>On hand: {{ prod_qty }} - Reorder Amount: {{ reorder_qty }}</h4></div>
+                        <div class="modal-body">{{ need_reordered }} </div>
+                        <div class="modal-body">
+                            <a href="{{ url_for('quick_change', product=prod_id, type='subtract', qty=1) }}">
+                                <button name="single-quick" class="btn btn-danger" align="left" value="subtract-one">Take 1</button>
+                            </a>
+                            <a href="{{ url_for('quick_change', product=prod_id, type='add', qty=1) }}">
+                                <button name="single-quick" class="btn btn-success" align="right" value="add-one">Add 1</button>
+                            </a>
+                            <br/>
+                                <a href="{{ url_for('quick_change', product=prod_id, type='subtract', qty=3) }}">
+                                <button name="single-quick" class="btn btn-danger" align="left" value="subtract-three">Take 3</button>
+                            </a>
+                            <a href="{{ url_for('quick_change', product=prod_id, type='add', qty=3) }}">
+                                <button name="single-quick" class="btn btn-success" align="right" value="add-three">Add 3</button>
+                            </a>
+                            <br/>
+                            <a href="{{ url_for('quick_change', product=prod_id, type='subtract', qty=5) }}">
+                                <button name="single-quick" class="btn btn-danger" align="left" value="subtract-three">Take 5</button>
+                            <a href="{{ url_for('quick_change', product=prod_id, type='add', qty=5) }}">
+                                <button name="single-quick" class="btn btn-success" align="right" value="add-five">Add 5</button>
+                            </a>
+                            </a>
+                        </div>
+                        <div class="modal-body">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                        <a href="{{ url_for('quick_change', product=prod_id, type='add', qty=reorder_qty) }}"
+                                <button name="restock" class="btn btn-primary" value="full-restock">Reorder</button>
+                            </a>
+                            <a href="{{ url_for('quick_change', product=prod_id, type='add', qty=reorder_qty) }}"
+                                <button name="restock" class="btn btn-secondary" value="full-restock">Restock</button>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+
+                </div>
+        {% endfor %}
+        </div>
+    {% endif %}
+    </div>
+</div>
+{% endblock %}

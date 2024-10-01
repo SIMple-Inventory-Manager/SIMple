@@ -1,0 +1,152 @@
+{% extends 'base-template.jinja' %}
+{% block content %}
+<div class="container">
+    <h3 align-"center">Inventory</h3>
+    <hr>
+    <div name="create-button">
+        <button class="btn btn-success" value="create" data-toggle="modal" data-target="#create">Add New</button>
+    </div>
+        <div id="create" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="trans_message" aria-hidden="true">
+            <form action = "{{ url_for('product') }}" method = "POST">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content new-item">
+                        <h3 align="center">New Item</h3>
+                        <div class="modal-body">
+                        <table>
+                            <tr>
+                                <td>Name:<span class="required">*</span></td><td><input name="prod_name" placeholder="Product Name" required autofocus></td>
+                            </tr>
+                            <tr>
+                                <td>UPC:</td><td> <input name="prod_upc" placeholder="Item UPC"></td>
+                            </tr>
+                            <tr>
+                                <td>Amount:<span class="required">*</span></td><td><input name="prod_quantity" placeholder="Current On Hand" type="number" required> </td>
+                            </tr>
+                            <tr>
+                                <td>Quick Take:<span class="required">*</span></td><td><input name="quick_take_qty" placeholder="Amount to remove quickly" type="number" required></td>
+                            </tr>
+                            <tr>
+                                <td>Reorder At:<span class="required">*</span></td><td><input name="reorder_qty" placeholder="When to reorder" type="number" required> </td>
+                            </tr>
+                            <tr>
+                                <td>Reorder Amount:</td><td><input name="restock_qty" placeholder="Amount in Box" type="number"></td>
+                            </tr>
+                            <tr>
+                                <td>Location:<span class="required">*</span></td><td>
+                                <select name="location" required>
+                                {% if not locations %}
+                                    <option value="stub">No locations available</option>
+                                {% else %}
+                                {% for location in locations %}
+                                        {% set location_id = location[0] %}
+                                        {%set location_name = location[1] %}
+                                        <option value="{{ location_id }}">{{location_name}}</option>
+                                {% endfor %}
+                                {% endif %}
+                                </select></td>
+                            </tr>
+                           <tr>
+                                <td> Categories:</td><td>
+                                <select name="categories">
+                                {% if not categories %}
+                                    <option value="stub">No categories available</option>
+                                    <!-- https://www.geeksforgeeks.org/how-to-use-checkbox-inside-select-option-using-javascript/ -->
+                                {% else %}
+                                {% for category in categories %}
+                                    <option value="{{ category[0] }}"> {{ category[1] }}</option>
+                                {% endfor %}
+                                {% endif %}}
+                                </select></td>
+                            </tr>
+                            </table>
+                        </div>
+                        <div id="extra-options" class="modal-body"></div>
+                        <div class="modal-footer">
+                            <span id="modal-disclaimer">Items marked with asterisk (<span class="required">*</span>) are required</span>
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                            <button type="submit" class="btn btn-primary">Create</button>
+                        </div>
+                    </div>
+                </form>
+        </div>
+    </div>
+    <table class="table">
+        <thead>
+            <th scope="col">Product ID</th>
+            <th scope="col">Product Name</th>
+            <th scope="col">Quantity</th>
+            <th scope="col">Minimum</th>
+            <th scope="col">Reorder</th>
+        </thead>
+        <tbody>
+            {% for product in products %}
+                {# Set data we may need into easy-to-use variables #}
+                {% set prod_id        = product[0] %}
+                {% set prod_name      = product[1] %}
+                {% set prod_upc       = product[2] %}
+                {% set prod_qty       = product[3]|int %}
+                {% set quick_take_qty = product[4]|int %}
+                {% set min_qty        = product[5]|int %}
+                {% set reorder_qty    = product[6]|int %}
+                {% set location       = product[7] %}
+                {% set categories     = product[8] %}
+                {% set been_reordered = product[9] %}
+
+                {% set need_reordered = "No" %}
+                {% if prod_qty < min_qty %}
+                    {% set need_reordered = "Yes" %}
+                {% endif %}
+
+                {% set unhooked_id = products.index(product)+1 %}
+                <tr>
+                    <td>{{ unhooked_id }}</td><td>{{ prod_name }}</td><td>{{ prod_qty }}</td><td>{{ min_qty }}</td><td>{{ need_reordered }}</td>
+                    <td>
+                        <a href="{{ url_for('delete', prod_id=prod_id, type='product') }}">
+                            <button name="button" type="button" class="btn btn-danger" value="delete" >delete</button><br>
+                        </a>
+                    </td>
+                    <td>
+                        <button name="button" type="button" class="btn btn-success" value= "edit" data-toggle="modal" data-target="#edit_{{ prod_id }}" >edit</button><br>
+                        <div id="edit_{{ prod_id }}" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="trans_message" aria-hidden="true">
+                            <form action="{{ url_for('edit', type='product') }}" method="post" class="base_form">
+                            <div class="modal-dialog" role="document">
+                                <div class="modal-content">
+                                    <div class="modal-body">Name: <input name="prod_name" placeholder="{{ prod_name }}"></div>
+                                    <div class="modal-body">
+                                        Amount: <input name="prod_quantity" placeholder="{{ prod_qty }}" id="input_{{ prod_id }}" type="number">
+                                    </div>
+                                    <div class = "modal-body">
+                                        Reorder At: <input name="prod_reorder" placeholder="{{ prod_reorder }}" id="input_{{ prod_id}}" type="number">
+                                    </div>
+                                    <div class="modal-footer">
+                                        <input name="prod_id" value="{{ prod_id }}" hidden aria-hidden="true">
+                                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                                            <button type="submit" class="btn btn-primary">Save changes</button>
+                                    </div>
+                                </div>
+                            </div>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+            {% endfor %}
+            <!-- Inserting data -->
+        </tbody>
+    </table>
+</div>
+<script>
+    let close = document.getElementsByClassName("btn btn-default");
+    for (let i=0; i<close.length; i++){
+        close[i].onclick = function () {
+            let clear_fields = document.getElementsByClassName("base_form");
+            for(let i=0;i<clear_fields.length;i++){
+                clear_fields[i].reset();
+            }
+            let all = document.getElementsByClassName("btn btn-primary");
+            for(let i=0;i<all.length;i++){
+                all[i].disabled = false;
+            }
+        }
+    }
+</script>
+{% endblock %}
