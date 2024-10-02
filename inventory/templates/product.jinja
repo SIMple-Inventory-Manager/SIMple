@@ -12,7 +12,7 @@
                     <div class="modal-content new-item">
                         <h3 align="center">New Item</h3>
                         <div class="modal-body">
-                        <table>
+                        <table id="create-item">
                             <tr>
                                 <td>Name:<span class="required">*</span></td><td><input name="prod_name" placeholder="Product Name" required autofocus></td>
                             </tr>
@@ -59,8 +59,10 @@
                                 </select></td>
                             </tr>
                             </table>
+                        <a href="javascript:enable_advanced('create')" id="advanced-items-toggle-create">Advanced Items ▼</a>
+
                         </div>
-                        <div id="extra-options" class="modal-body"></div>
+                        <div id="extra-options-create" class="modal-body"></div>
                         <div class="modal-footer">
                             <span id="modal-disclaimer">Items marked with asterisk (<span class="required">*</span>) are required</span>
                             <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
@@ -87,10 +89,32 @@
                 {% set prod_qty       = product[3]|int %}
                 {% set quick_take_qty = product[4]|int %}
                 {% set min_qty        = product[5]|int %}
-                {% set reorder_qty    = product[6]|int %}
+                {% set restock_qty    = product[6]|int %}
                 {% set location       = product[7] %}
                 {% set categories     = product[8] %}
                 {% set been_reordered = product[9] %}
+                {% set vendor         = product[10] %}
+                {% set vendor_url     = product[11] %}
+                {% set purchase_cost  = product[12] %}
+                {% set sale_price     = product[13] %}
+
+                {# Data Validation -- pretty sure this can/should be done server-side #}
+                {% if not vendor %}
+                    {% set vendor = "" %}
+                {% endif %}
+                {% if not vendor_url %}
+                    {% set vendor_url = "" %}
+                {% endif %}
+                {% if not purchase_cost %}
+                    {% set purchase_cost = "" %}
+                {% else %}
+                    {% set purchase_cost = purchase_cost|float %}
+                {% endif %}
+                {% if not sale_price %}
+                    {% set sale_price = "" %}
+                {% else %}
+                    {% set sale_price = sale_price|float %}
+                {% endif %}
 
                 {% set need_reordered = "No" %}
                 {% if prod_qty < min_qty %}
@@ -110,20 +134,67 @@
                         <div id="edit_{{ prod_id }}" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="trans_message" aria-hidden="true">
                             <form action="{{ url_for('edit', type='product') }}" method="post" class="base_form">
                             <div class="modal-dialog" role="document">
-                                <div class="modal-content">
-                                    <div class="modal-body">Name: <input name="prod_name" placeholder="{{ prod_name }}"></div>
+                                <div class="modal-content new-item">
+                                    <h3 align="center">{{ prod_name }}</h3>
                                     <div class="modal-body">
-                                        Amount: <input name="prod_quantity" placeholder="{{ prod_qty }}" id="input_{{ prod_id }}" type="number">
-                                    </div>
-                                    <div class = "modal-body">
-                                        Reorder At: <input name="prod_reorder" placeholder="{{ prod_reorder }}" id="input_{{ prod_id}}" type="number">
-                                    </div>
+                                    <table>
+                                        <tr>
+                                            <td>Name:</span></td><td><input name="prod_name" placeholder="{{ prod_name }}" autofocus></td>
+                                        </tr>
+                                        <tr>
+                                            <td>UPC:</td><td> <input name="prod_upc" placeholder="{{ prod_upc }}"></td>
+                                        </tr>
+                                        <tr>
+                                            <td>Amount:</td><td><input name="prod_quantity" placeholder="{{ prod_qty}}" type="number"> </td>
+                                        </tr>
+                                        <tr>
+                                            <td>Quick Take:</td><td><input name="quick_take_qty" placeholder="{{ quick_take_qty }}" type="number"></td>
+                                        </tr>
+                                        <tr>
+                                            <td>Reorder At:</td><td><input name="reorder_qty" placeholder="{{ min_qty }}" type="number"> </td>
+                                        </tr>
+                                        <tr>
+                                            <td>Reorder Amount:</td><td><input name="restock_qty" placeholder="{{ restock_qty }}" type="number"></td>
+                                        </tr>
+                                        <tr>
+                                            <td>Location:</td><td>
+                                            <select name="location">
+                                            {% if not locations %}
+                                                <option value="stub">No locations available</option>
+                                            {% else %}
+                                            {% for location in locations %}
+                                                    {% set location_id = location[0] %}
+                                                    {%set location_name = location[1] %}
+                                                    <option value="{{ location_id }}">{{location_name}}</option>
+                                            {% endfor %}
+                                            {% endif %}
+                                            </select></td>
+                                        </tr>
+                                        <tr>
+                                            <td> Categories:</td><td>
+                                            <select name="categories">
+                                            {% if not categories %}
+                                                <option value="stub">No categories available</option>
+                                                <!-- https://www.geeksforgeeks.org/how-to-use-checkbox-inside-select-option-using-javascript/ -->
+                                            {% else %}
+                                                {% for category in categories %}
+                                                    <option value="{{ category[0] }}"> {{ category[1] }}</option>
+                                                {% endfor %}
+                                            {% endif %}}
+                                            </select></td>
+                                        </tr>
+                                        </table>
+                                        <a href="javascript:enable_advanced({{ [prod_id, vendor, vendor_url, purchase_cost, sale_price] }})" id="advanced-items-toggle-{{ prod_id }}">Advanced Items ▼</a>
+
+                        </div>
+                        <div id="extra-options-{{prod_id}}" class="modal-body"></div>
                                     <div class="modal-footer">
                                         <input name="prod_id" value="{{ prod_id }}" hidden aria-hidden="true">
                                         <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
                                             <button type="submit" class="btn btn-primary">Save changes</button>
                                     </div>
                                 </div>
+                            </div>
                             </div>
                             </form>
                         </div>
@@ -133,6 +204,8 @@
             <!-- Inserting data -->
         </tbody>
     </table>
+    {% block item_modal %}
+    {% endblock %}
 </div>
 <script>
     let close = document.getElementsByClassName("btn btn-default");

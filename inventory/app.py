@@ -35,8 +35,8 @@ def init_database():
         "prod_upc TEXT UNIQUE NOT NULL, "
         "prod_quantity INTEGER NOT NULL, "
         "quick_take_qty INTEGER NOT NULL, "
-        "prod_reorder INTEGER NOT NULL, "
-        "reorder_qty INTEGER, "
+        "reorder_qty INTEGER NOT NULL, "
+        "restock_qty INTEGER, "
         "location TEXT NOT NULL, "
         "categories TEXT, "
         "been_reordered INTEGER, " # BOOL
@@ -79,7 +79,7 @@ def summary():
         warehouse = conn.execute("SELECT * FROM location").fetchall()
         products = conn.execute("SELECT * FROM products ORDER BY prod_name ASC").fetchall()
         q_data = conn.execute(
-            "SELECT prod_name, unallocated_quantity, prod_quantity, prod_reorder, reorder_qty, been_reordered FROM products"
+            "SELECT prod_name, unallocated_quantity, prod_quantity, reorder_qty, restock_qty, been_reordered FROM products"
         ).fetchall()
 
     return render_template(
@@ -134,7 +134,7 @@ def product():
 
             if transaction_allowed:
                 conn.execute(
-                    "INSERT INTO products (prod_name, prod_upc, prod_quantity, quick_take_qty, prod_reorder, reorder_qty, location, categories) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                    "INSERT INTO products (prod_name, prod_upc, prod_quantity, quick_take_qty, reorder_qty, restock_qty, location, categories) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
                     (prod_name, prod_upc, quantity, quick_take_qty, reorder_qty, restock_qty, location, categories),
                 )
                 return redirect(VIEWS["Stock"])
@@ -376,33 +376,72 @@ def edit():
                 return redirect(VIEWS["Warehouses"])
 
             case "product":
-                prod_id, prod_name, prod_quantity, prod_reorder = (
-                    request.form["prod_id"],
-                    request.form["prod_name"],
-                    request.form["prod_quantity"],
-                    request.form["prod_reorder"]
-                )
+                (prod_id,
+                prod_name,
+                prod_upc,
+                prod_quantity,
+                quick_take_qty,
+                reorder_qty,
+                restock_qty,
+                location,
+                categories) = (
+                            request.form["prod_id"],
+                            request.form["prod_name"],
+                            request.form["prod_upc"],
+                            request.form["prod_quantity"],
+                            request.form["quick_take_qty"],
+                            request.form["reorder_qty"],
+                            request.form["restock_qty"],
+                            request.form["location"],
+                            request.form["categories"]
+                            )
+                ## Validate Data
+                for to_check in [prod_name, prod_quantity, quick_take_qty, reorder_qty, restock_qty, location]:
+                    if to_check not in EMPTY_SYMBOLS:
+                        try:
+                            int(to_check)
+                        except ValueError:
+                            print("Expected integer, did not recieve one.")
 
                 if prod_name:
                     conn.execute(
                         "UPDATE products SET prod_name = ? WHERE prod_id = ?",
                         (prod_name, prod_id),
                     )
+                if prod_upc:
+                    conn.execute(
+                        "UPDATE products SET prod_upc = ? WHERE prod_id = ?",
+                        (prod_upc, prod_id)
+                        )
                 if prod_quantity:
-                    old_prod_quantity = conn.execute(
-                        "SELECT prod_quantity FROM products WHERE prod_id = ?", (prod_id,)
-                    ).fetchone()[0]
                     conn.execute(
-                        "UPDATE products SET prod_quantity = ?, unallocated_quantity =  unallocated_quantity + ? - ? WHERE prod_id = ?",
-                        (prod_quantity, prod_quantity, old_prod_quantity, prod_id),
+                        "UPDATE products SET prod_quantity = ? WHERE prod_id = ?",
+                        (int(prod_quantity), prod_id),
                     )
-                if prod_reorder:
-                    old_prod_quantity = conn.execute(
-                            "SELECT prod_reorder FROM products WHERE prod_id = ?", (prod_id,)
-                    ).fetchone()[0]
+                if quick_take_qty:
                     conn.execute(
-                            "UPDATE products SET prod_reorder = ? WHERE prod_id = ?",
-                            (int(prod_reorder), prod_id),
+                        "UPDATE products SET quick_take_qty = ? WHERE prod_id = ?",
+                        (int(quick_take_qty), prod_id),
+                    )
+                if reorder_qty:
+                    conn.execute(
+                            "UPDATE products SET reorder_qty = ? WHERE prod_id = ?",
+                            (int(reorder_qty), prod_id),
+                    )
+                if restock_qty:
+                    conn.execute(
+                            "UPDATE products SET restock_qty = ? WHERE prod_id = ?",
+                            (int(restock_qty), prod_id),
+                    )
+                if location:
+                    conn.execute(
+                        "UPDATE products SET location = ? WHERE prod_id = ?",
+                        (location, prod_id),
+                    )
+                if categories:
+                    conn.execute(
+                        "UPDATE products SET categories = ? WHERE prod_id = ?",
+                        (categories, prod_id),
                     )
 
                 return redirect(VIEWS["Stock"])
