@@ -128,7 +128,7 @@ def product():
                 print("Expected integer, did not recieve one.")
                 transaction_allowed = False
             
-            for to_check in [prod_name, quantity, quick_take_qty, reorder_qty, restock_qty, location]:
+            for to_check in [prod_name, prod_upc, quantity, quick_take_qty, reorder_qty, restock_qty, location]:
                 if to_check in EMPTY_SYMBOLS:
                     transaction_allowed = False
 
