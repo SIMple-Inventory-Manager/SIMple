@@ -131,6 +131,13 @@ def product():
             for to_check in [prod_name, prod_upc, quantity, quick_take_qty, reorder_qty, restock_qty, location]:
                 if to_check in EMPTY_SYMBOLS:
                     transaction_allowed = False
+            for num_validation in [quantity, quick_take_qty, reorder_qty, restock_qty]:
+                if num_validation < 0:
+                    transaction_allowed = False
+                    return render_template(
+                        'modal.jinja',
+                        transaction_message=f"Please do not enter negative numbers."
+                    )
 
             if transaction_allowed:
                 conn.execute(
@@ -339,7 +346,13 @@ def quick_change():
         request.args.get("product"),
         request.args.get("qty")
     )
-    qty = int(qty)
+    try:
+        qty = int(qty)
+    except ValueError:
+        return render_template(
+            'modal.jinja',
+            transaction_message=f"Unable to '{quick_change_type} {qty}' as '{qty}' is not a number."
+        )
 
     with sqlite3.connect(DATABASE_NAME) as conn:
         old_prod_quantity = conn.execute(
@@ -352,6 +365,8 @@ def quick_change():
             case "add":
                 new_qty = old_prod_quantity + qty
                 print(f"Will add {qty} to {old_prod_quantity} for updated {new_qty}")
+        if new_qty < 0:
+            new_qty = 0
         conn.execute(
                 "UPDATE products SET prod_quantity = ? WHERE prod_id = ?",
                 (new_qty,  prod_id),
@@ -396,12 +411,17 @@ def edit():
                             request.form["categories"]
                             )
                 ## Validate Data
-                for to_check in [prod_name, prod_quantity, quick_take_qty, reorder_qty, restock_qty, location]:
+                for to_check in [prod_quantity, quick_take_qty, reorder_qty, restock_qty]:
                     if to_check not in EMPTY_SYMBOLS:
                         try:
-                            int(to_check)
+                            if int(to_check) < 0:
+                                return render_template(
+                                    'modal.jinja',
+                                    transaction_message=f"Please do not enter negative numbers."
+                            )
                         except ValueError:
                             print("Expected integer, did not recieve one.")
+                        
 
                 if prod_name:
                     conn.execute(
