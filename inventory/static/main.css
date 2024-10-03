@@ -56,3 +56,22 @@
 .out:hover{
     background-color: #d40000;
 }
+
+#custom-edit{
+    display: none;
+}
+
+.custom-number-edit-box{
+    width: 170px;
+}
+.custom-number{
+    height: 50px;
+    width: 50px;
+    margin: 3px;
+}
+
+.custom-num-text{
+    height: 50px;
+    width: 75px;
+    margin: 2.5px;
+}

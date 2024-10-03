@@ -56,5 +56,53 @@ function disable_advanced(){
         document.getElementById(options_id).innerHTML = "";
         document.getElementById(url_id).innerText = "Advanced Items ▼";
         document.getElementById(url_id).href = prev_href;
+}
+
+// Custom number
+function clear_number(){
+    document.getElementById("custom-number-box").value = "";
+}
+function compose_number(input){
+    current_num = document.getElementById("custom-number-box").value;
+
+    new_num = current_num + input;
+    console.log("Setting new number as " + new_num);
+
+    document.getElementById("custom-number-box").value = new_num;
+}
+
+function enable_custom(prod_id, type){
+   chunk ='<input name="custom_qty" id="custom-number-box" class="custom-number-edit-box"/>'
+   add = '<input name="txn_type" value="add" hidden><button class="btn btn-success" type="submit">Add</button>'
+   subtract = '<input name="txn_type" value="subtract" hidden><button class="btn btn-danger" type="submit">Take</button>'
+
+   if (type == "add"){
+       chunk = chunk + add;
+    }
+    else if (type == "subtract"){
+        chunk = chunk + subtract
+    }
+    document.getElementById("display-"+prod_id).innerHTML = chunk;
+
+    keypad = generate_keypad()
+    document.getElementById("custom-insert-"+ prod_id).innerHTML = keypad;
+
+}
+
+function generate_keypad(){
+    info = "<table><tr>"
+    for (i = 1; i <= 9; i++){
+        blurb = '<td><a href="javascript:compose_number('+ i +')"><button class="btn custom-number">'+ i +'</button></a></td>'
+        if (i % 3 == 0 ){
+            blurb += "</tr><tr>"
+        }
+        info += blurb
+    }
+    info += "</table>"
+    return info
+}
+
+
+function disable_custom(prod_id){
 
 }

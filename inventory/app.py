@@ -342,10 +342,17 @@ def delete():
 @app.route("/quick-change", methods=["GET", "POST"])
 def quick_change():
     quick_change_type = request.args.get("type")
-    prod_id, qty = (
-        request.args.get("product"),
-        request.args.get("qty")
-    )
+    if quick_change_type == "form":
+        quick_change_type, prod_id, qty = (
+                request.form["txn_type"],
+                request.form["product_id"],
+                request.form["custom_qty"]
+            )
+    else:
+        prod_id, qty = (
+            request.args.get("product"),
+            request.args.get("qty")
+        )
     try:
         qty = int(qty)
     except ValueError:

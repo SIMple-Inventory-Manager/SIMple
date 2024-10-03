@@ -61,20 +61,31 @@
                             <a href="{{ url_for('quick_change', product=prod_id, type='add', qty=1) }}">
                                 <button name="single-quick" class="btn btn-success" align="right" value="add-one">Add 1</button>
                             </a>
+                            {% if quick_take_qty > 1 %}
                             <br/>
-                                <a href="{{ url_for('quick_change', product=prod_id, type='subtract', qty=3) }}">
-                                <button name="single-quick" class="btn btn-danger" align="left" value="subtract-three">Take 3</button>
+                                <a href="{{ url_for('quick_change', product=prod_id, type='subtract', qty=quick_take_qty ) }}">
+                                <button name="single-quick" class="btn btn-danger" align="left" value="subtract-quick-take">Take {{quick_take_qty}}</button>
                             </a>
-                            <a href="{{ url_for('quick_change', product=prod_id, type='add', qty=3) }}">
-                                <button name="single-quick" class="btn btn-success" align="right" value="add-three">Add 3</button>
+                            <a href="{{ url_for('quick_change', product=prod_id, type='add', qty=quick_take_qty) }}">
+                                <button name="single-quick" class="btn btn-success" align="right" value="add-quick-take">Add {{ quick_take_qty }}</button>
                             </a>
                             <br/>
-                            <a href="{{ url_for('quick_change', product=prod_id, type='subtract', qty=5) }}">
-                                <button name="single-quick" class="btn btn-danger" align="left" value="subtract-three">Take 5</button>
-                            <a href="{{ url_for('quick_change', product=prod_id, type='add', qty=5) }}">
-                                <button name="single-quick" class="btn btn-success" align="right" value="add-five">Add 5</button>
+                            {% else %}
+                            <br>
+                            {% endif %}
+                            <a href="javascript:enable_custom({{prod_id}}, 'subtract')" id="custom-subtract-{{prod_id}}">
+                                <button name="single-quick" class="btn btn-danger" align="left" value="subtract-custom">Take Other</button>
                             </a>
+                            <a href="javascript:enable_custom({{prod_id}}, 'add')" id="custom-subtract-{{prod_id}}">
+                                <button name="single-quick" class="btn btn-success" align="right" value="add-custom">Add other</button>
                             </a>
+                        </div>
+                        <form action="{{ url_for('quick_change', type='form') }}" method="POST">
+                        <input name="product_id" hidden value="{{ prod_id }}">
+                        <div id="display-{{ prod_id }}"></div>
+                        </form>
+                        <div class="modal-body custom-keypad" id="custom-insert-{{prod_id}}">
+
                         </div>
                         <div class="modal-body">
                         <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
