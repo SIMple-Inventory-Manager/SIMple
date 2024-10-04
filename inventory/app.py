@@ -8,6 +8,7 @@ from pathlib import Path
 # imports - third party imports
 from flask import Flask, redirect, render_template, request
 
+
 DATABASE_NAME = "inventory.sqlite"
 _DATABASE_PATH = Path(__file__).parent.parent / DATABASE_NAME
 VIEWS = {
@@ -71,7 +72,6 @@ def init_database():
 
 
 app.init_db = init_database
-
 
 @app.route("/", methods=["GET"])
 def summary():
@@ -341,6 +341,14 @@ def delete():
 
 @app.route("/quick-change", methods=["GET", "POST"])
 def quick_change():
+    def update_qty(prod_id, qty):
+        if qty < 0:
+            qty = 0
+        conn.execute(
+                "UPDATE products SET prod_quantity = ? WHERE prod_id = ?",
+                (new_qty,  prod_id),
+            )
+
     quick_change_type = request.args.get("type")
     if quick_change_type == "form":
         quick_change_type, prod_id, qty = (
@@ -353,13 +361,11 @@ def quick_change():
             request.args.get("product"),
             request.args.get("qty")
         )
-    try:
-        qty = int(qty)
-    except ValueError:
-        return render_template(
-            'modal.jinja',
-            transaction_message=f"Unable to '{quick_change_type} {qty}' as '{qty}' is not a number."
-        )
+    if qty:
+        try:
+            qty = int(qty)
+        except:
+            print(f"Failure: {qty} is not an integer")
 
     with sqlite3.connect(DATABASE_NAME) as conn:
         old_prod_quantity = conn.execute(
@@ -368,16 +374,22 @@ def quick_change():
         match quick_change_type:
             case "subtract":
                 new_qty = old_prod_quantity - qty
-                print(f"Will take away {qty} from {old_prod_quantity} for updated {new_qty}")
+                update_qty(prod_id, new_qty)
             case "add":
                 new_qty = old_prod_quantity + qty
-                print(f"Will add {qty} to {old_prod_quantity} for updated {new_qty}")
-        if new_qty < 0:
-            new_qty = 0
-        conn.execute(
-                "UPDATE products SET prod_quantity = ? WHERE prod_id = ?",
-                (new_qty,  prod_id),
-            )
+                update_qty(prod_id, new_qty)
+            case "reorder":
+                conn.execute(
+                    "UPDATE products SET been_reordered = 1 WHERE prod_id = ?", (prod_id)
+                    )
+            case "restock":
+                restock_qty = conn.execute("SELECT restock_qty FROM products WHERE prod_id = ?", (prod_id)).fetchone()[0]
+                new_qty = old_prod_quantity + restock_qty
+                conn.execute(
+                    "UPDATE products SET been_reordered = 0, prod_quantity = ? WHERE prod_id = ?", (new_qty, prod_id)
+                    )
+
+
         return redirect(VIEWS["Summary"])
 
 
@@ -475,7 +487,6 @@ def edit():
 
             case _:
                 return redirect(VIEWS["Summary"])
-
 
 with app.app_context():
     app.init_db()
