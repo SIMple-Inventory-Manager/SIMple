@@ -1,5 +1,5 @@
-.subtract{
-    background-image= url("ui/minus-button.svg")
+.content{
+    margin-left: 25px;
 }
 
 #modal-disclaimer {
@@ -7,8 +7,16 @@
     font-size: .8em;
 }
 #reorder-icon{
-    height: 25px;
-    width: 30px;
+    height: 20px;
+    width: 25px;
+}
+
+.small-table{
+    max-width: 60%
+}
+
+.needs-space{
+    margin: 5px;
 }
 
 .new-item{

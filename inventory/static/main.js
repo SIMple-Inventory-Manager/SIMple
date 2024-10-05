@@ -26,13 +26,13 @@ function enable_advanced(items){
 
     chunk = "<table>" +
             "<tr>" +
-            "<td>Vendor:</td><td><input name='vendor' placeholder="+ vendor_name +"></td>" +
+            "<td>Vendor:</td><td><input name='vendor' placeholder="+ vendor_name +" autocomplete='off'></td>" +
             "</tr><tr>" +
-            "<td>Reorder from:</td><td><input name='vendor_url' placeholder="+ vendor_url +"></td>" +
+            "<td>Reorder from:</td><td><input name='vendor_url' placeholder="+ vendor_url +" autocomplete='off'></td>" +
             "</tr><tr>" +
-            "<td>Purchase Cost:</td><td><input name='purchase_cost' placeholder="+ purchase_cost+"></td>" +
+            "<td>Purchase Cost:</td><td><input name='purchase_cost' placeholder="+ purchase_cost+" autocomplete='off'></td>" +
             "</tr><tr>" +
-            "<td>Sale Price:</td><td><input name='sale_price' placeholder="+ sale_price +"></td>" +
+            "<td>Sale Price:</td><td><input name='sale_price' placeholder="+ sale_price +" autocomplete='off'></td>" +
             "</tr>" +
             "</table>"
 
@@ -72,7 +72,7 @@ function compose_number(input){
 }
 
 function enable_custom(prod_id, type){
-   chunk ='<input name="custom_qty" id="custom-number-box" class="custom-number-edit-box"/>'
+   chunk ='<input name="custom_qty" id="custom-number-box" class="custom-number-edit-box needs-space"/>'
    add = '<input name="txn_type" value="add" hidden><button class="btn btn-success" type="submit">Add</button>'
    subtract = '<input name="txn_type" value="subtract" hidden><button class="btn btn-danger" type="submit">Take</button>'
 
@@ -84,12 +84,12 @@ function enable_custom(prod_id, type){
     }
     document.getElementById("display-"+prod_id).innerHTML = chunk;
 
-    keypad = generate_keypad()
+    keypad = generate_keypad(prod_id)
     document.getElementById("custom-insert-"+ prod_id).innerHTML = keypad;
 
 }
 
-function generate_keypad(){
+function generate_keypad(prod_id){
     info = "<table><tr>"
     for (i = 1; i <= 9; i++){
         blurb = '<td><a href="javascript:compose_number('+ i +')"><button class="btn custom-number">'+ i +'</button></a></td>'
@@ -98,11 +98,17 @@ function generate_keypad(){
         }
         info += blurb
     }
-    info += "</table>"
+    info += '</tr> <tr> <td></td>' +
+    '<td><a href="javascript:compose_number(0)"><button class="btn custom-number">0</button></a></td>'+
+    '<td></td></tr></table> <table><tr>' + // Close previous table so below buttons don't affect the nice grid'
+    '<td><a href="javascript:clear_number()"><button class="btn custom-number-text">Clear</button></a></td>' +
+    '<td><a href="javascript:disable_custom('+ prod_id +')"><button class="btn custom-number-text">Cancel</button></a></td>' +
+    '</tr> </table>'
     return info
 }
 
 
 function disable_custom(prod_id){
-
+    document.getElementById("display-"+prod_id).innerHTML = "";
+    document.getElementById("custom-insert-"+ prod_id).innerHTML = "";
 }

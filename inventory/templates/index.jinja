@@ -57,34 +57,63 @@
                 <div id="edit_{{ prod_id }}" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="trans_message" aria-hidden="true">
                 <div class="modal-dialog" role="document">
                     <div class="modal-content">
-                        <div class="modal-body"><h3>{{ prod_name }}</h3></div>
-                        <div class="modal-body"><h4>On hand: {{ prod_qty }} - Reorder Amount: {{ reorder_qty }}</h4></div>
-                        <div class="modal-body">{{ need_reordered }} </div>
                         <div class="modal-body">
-                            <a href="{{ url_for('quick_change', product=prod_id, type='subtract', qty=1) }}">
-                                <button name="single-quick" class="btn btn-danger" align="left" value="subtract-one">Take 1</button>
-                            </a>
-                            <a href="{{ url_for('quick_change', product=prod_id, type='add', qty=1) }}">
-                                <button name="single-quick" class="btn btn-success" align="right" value="add-one">Add 1</button>
-                            </a>
+                            <h3>{{ prod_name }}</h3>
+                            <table class="table small-table">
+                                <tr>
+                                    <th>On hand</th>
+                                    <th>Minimum</th>
+                                    <th>Restock</th>
+                                </tr>
+                                <tr>
+                                    <td>{{ prod_qty }}</td>
+                                    <td>{{ min_qty }}</td>
+                                    <td>{{ reorder_qty }}</td>
+                                </tr>
+                                </table>
+                            <h5>{{ need_reordered }}</table>
+                        </div>
+                        <div class="modal-body">
+                        <table>
+                            <tr align="center">
+                                <td>
+                                    <a href="{{ url_for('quick_change', product=prod_id, type='subtract', qty=1) }}">
+                                        <button name="single-quick" class="btn btn-danger needs-space" align="left" value="subtract-one">Take 1</button>
+                                    </a>
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('quick_change', product=prod_id, type='add', qty=1) }}">
+                                        <button name="single-quick" class="btn btn-success needs-space" align="right" value="add-one">Add 1</button>
+                                    </a>
+                                <td>
+                            </tr>
                             {% if quick_take_qty > 1 %}
-                            <br/>
-                                <a href="{{ url_for('quick_change', product=prod_id, type='subtract', qty=quick_take_qty ) }}">
-                                <button name="single-quick" class="btn btn-danger" align="left" value="subtract-quick-take">Take {{quick_take_qty}}</button>
-                            </a>
-                            <a href="{{ url_for('quick_change', product=prod_id, type='add', qty=quick_take_qty) }}">
-                                <button name="single-quick" class="btn btn-success" align="right" value="add-quick-take">Add {{ quick_take_qty }}</button>
-                            </a>
-                            <br/>
-                            {% else %}
-                            <br>
+                            <tr align="center">
+                                <td>
+                                    <a href="{{ url_for('quick_change', product=prod_id, type='subtract', qty=quick_take_qty ) }}">
+                                    <button name="single-quick" class="btn btn-danger needs-space" align="left" value="subtract-quick-take">Take {{quick_take_qty}}</button>
+                                </a>
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('quick_change', product=prod_id, type='add', qty=quick_take_qty) }}">
+                                        <button name="single-quick" class="btn btn-success" align="right" value="add-quick-take needs-space">Add {{ quick_take_qty }}</button>
+                                    </a>
+                                </td>
+                            </tr>
                             {% endif %}
-                            <a href="javascript:enable_custom({{prod_id}}, 'subtract')" id="custom-subtract-{{prod_id}}">
-                                <button name="single-quick" class="btn btn-danger" align="left" value="subtract-custom">Take Other</button>
-                            </a>
-                            <a href="javascript:enable_custom({{prod_id}}, 'add')" id="custom-subtract-{{prod_id}}">
-                                <button name="single-quick" class="btn btn-success" align="right" value="add-custom">Add other</button>
-                            </a>
+                            <tr align="center">
+                                <td>
+                                    <a href="javascript:enable_custom({{prod_id}}, 'subtract')" id="custom-subtract-{{prod_id}}">
+                                        <button name="single-quick" class="btn btn-danger needs-space" align="left" value="subtract-custom">Take Other</button>
+                                    </a>
+                                </td>
+                                <td>
+                                    <a href="javascript:enable_custom({{prod_id}}, 'add')" id="custom-subtract-{{prod_id}}">
+                                        <button name="single-quick" class="btn btn-success needs-space" align="right" value="add-custom">Add other</button>
+                                    </a>
+                                </td>
+                            </tr>
+                        </table>
                         </div>
                         <form action="{{ url_for('quick_change', type='form') }}" method="POST">
                         <input name="product_id" hidden value="{{ prod_id }}">

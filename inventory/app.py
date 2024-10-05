@@ -8,7 +8,6 @@ from pathlib import Path
 # imports - third party imports
 from flask import Flask, redirect, render_template, request
 
-
 DATABASE_NAME = "inventory.sqlite"
 _DATABASE_PATH = Path(__file__).parent.parent / DATABASE_NAME
 VIEWS = {
@@ -100,49 +99,57 @@ def product():
 
     with sqlite3.connect(DATABASE_NAME) as conn:
         if request.method == "POST":
+            ## product = get_data(request)
             (prod_name,
             prod_upc,
-            quantity,
-            quick_take_qty, 
-            reorder_qty, 
+            prod_quantity,
+            quick_take_qty,
+            reorder_qty,
             restock_qty,
             location,
             categories) = (
-                        request.form["prod_name"], 
+                        request.form["prod_name"],
                         request.form["prod_upc"],
-                        request.form["prod_quantity"], 
+                        request.form["prod_quantity"],
                         request.form["quick_take_qty"],
-                        request.form["reorder_qty"], 
+                        request.form["reorder_qty"],
                         request.form["restock_qty"],
                         request.form["location"],
                         request.form["categories"]
                         )
             ## Verify Data
             transaction_allowed = True
-            try:
-                quantity = int(quantity)
-                quick_take_qty = int(quick_take_qty)
-                restock_qty = int(restock_qty)
-                reorder_qty = int(reorder_qty)
-            except ValueError:
-                print("Expected integer, did not recieve one.")
-                transaction_allowed = False
-            
-            for to_check in [prod_name, prod_upc, quantity, quick_take_qty, reorder_qty, restock_qty, location]:
-                if to_check in EMPTY_SYMBOLS:
+            for value in [prod_name, prod_upc, prod_quantity, quick_take_qty, reorder_qty, restock_qty, location]:
+                if value in EMPTY_SYMBOLS:
                     transaction_allowed = False
-            for num_validation in [quantity, quick_take_qty, reorder_qty, restock_qty]:
+                    error_type = "Required Field Left Empty"
+                    return render_template(
+                                    'modal.jinja',
+                                    link=VIEWS,
+                                    error_code=error_type,
+                                    transaction_message=f"Unable to set required field, {name}",
+                                    previous=VIEWS["Stock"]
+                                )
+            prod_quantity = int(prod_quantity)
+            quick_take_qty = int(quick_take_qty)
+            reorder_qty = int(reorder_qty)
+            restock_qty = int(restock_qty)
+            for num_validation in [prod_quantity, quick_take_qty, reorder_qty, restock_qty]:
                 if num_validation < 0:
                     transaction_allowed = False
+                    error_type = "Negative Values"
                     return render_template(
-                        'modal.jinja',
-                        transaction_message=f"Please do not enter negative numbers."
-                    )
+                                    'modal.jinja',
+                                    link=VIEWS,
+                                    error_code=error_type,
+                                    transaction_message=f"Unable to set {name}. Value '{value}' is invalid.",
+                                    previous=VIEWS["Stock"]
+                                )
 
             if transaction_allowed:
                 conn.execute(
                     "INSERT INTO products (prod_name, prod_upc, prod_quantity, quick_take_qty, reorder_qty, restock_qty, location, categories) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-                    (prod_name, prod_upc, quantity, quick_take_qty, reorder_qty, restock_qty, location, categories),
+                    (prod_name, prod_upc, prod_quantity, quick_take_qty, reorder_qty, restock_qty, location, categories),
                 )
                 return redirect(VIEWS["Stock"])
 
@@ -342,11 +349,9 @@ def delete():
 @app.route("/quick-change", methods=["GET", "POST"])
 def quick_change():
     def update_qty(prod_id, qty):
-        if qty < 0:
-            qty = 0
         conn.execute(
                 "UPDATE products SET prod_quantity = ? WHERE prod_id = ?",
-                (new_qty,  prod_id),
+                (qty,  prod_id),
             )
 
     quick_change_type = request.args.get("type")
@@ -362,10 +367,7 @@ def quick_change():
             request.args.get("qty")
         )
     if qty:
-        try:
-            qty = int(qty)
-        except:
-            print(f"Failure: {qty} is not an integer")
+        qty = int(qty)
 
     with sqlite3.connect(DATABASE_NAME) as conn:
         old_prod_quantity = conn.execute(
@@ -374,13 +376,20 @@ def quick_change():
         match quick_change_type:
             case "subtract":
                 new_qty = old_prod_quantity - qty
+                if new_qty < 0:
+                    new_qty = 0
                 update_qty(prod_id, new_qty)
             case "add":
                 new_qty = old_prod_quantity + qty
                 update_qty(prod_id, new_qty)
             case "reorder":
+                get_state = conn.execute("SELECT been_reordered FROM products WHERE prod_id = ?", (prod_id)).fetchone()[0]
+                if get_state == 1:
+                    new_state = 0
+                elif get_state == 0:
+                    new_state = 1
                 conn.execute(
-                    "UPDATE products SET been_reordered = 1 WHERE prod_id = ?", (prod_id)
+                    "UPDATE products SET been_reordered = ? WHERE prod_id = ?", (new_state, prod_id)
                     )
             case "restock":
                 restock_qty = conn.execute("SELECT restock_qty FROM products WHERE prod_id = ?", (prod_id)).fetchone()[0]
@@ -397,6 +406,12 @@ def quick_change():
 
 @app.route("/edit", methods=["POST"])
 def edit():
+    def update_db(column, value, prod_id):
+        conn.execute(
+                    f"UPDATE products SET {column} = ? WHERE prod_id = ?",
+                    (value, prod_id),
+                    )
+
     edit_record_type = request.args.get("type")
 
     with sqlite3.connect(DATABASE_NAME) as conn:
@@ -419,69 +434,54 @@ def edit():
                 restock_qty,
                 location,
                 categories) = (
-                            request.form["prod_id"],
-                            request.form["prod_name"],
-                            request.form["prod_upc"],
-                            request.form["prod_quantity"],
-                            request.form["quick_take_qty"],
-                            request.form["reorder_qty"],
-                            request.form["restock_qty"],
-                            request.form["location"],
-                            request.form["categories"]
+                            ["Product ID", "prod_id", request.form["prod_id"]],
+                            ["Product Name", "prod_name", request.form["prod_name"]],
+                            ["Product UPC", "prod_upc", request.form["prod_upc"]],
+                            ["Product Quantity", "prod_quantity", request.form["prod_quantity"]],
+                            ["Product Quick Take", "quick_take_qty", request.form["quick_take_qty"]],
+                            ["Minimum Quantity", "reorder_qty", request.form["reorder_qty"]],
+                            ["Restock Quantity", "restock_qty", request.form["restock_qty"]],
+                            ["Location", "location", request.form["location"]],
+                            ["Categories", "categories", request.form["categories"]]
                             )
                 ## Validate Data
-                for to_check in [prod_quantity, quick_take_qty, reorder_qty, restock_qty]:
-                    if to_check not in EMPTY_SYMBOLS:
-                        try:
-                            if int(to_check) < 0:
-                                return render_template(
-                                    'modal.jinja',
-                                    transaction_message=f"Please do not enter negative numbers."
-                            )
-                        except ValueError:
-                            print("Expected integer, did not recieve one.")
-                        
+                for name, _, value in [prod_quantity, quick_take_qty, reorder_qty, restock_qty]:
+                    if value not in EMPTY_SYMBOLS:
+                        if int(value) < 0:
+                            error_type = "Negative Values"
+                            return render_template(
+                                            'modal.jinja',
+                                            link=VIEWS,
+                                            error_code=error_type,
+                                            transaction_message=f"Unable to change {name}. Value '{value}' is invalid.",
+                                            previous=VIEWS["Stock"]
+                                        )
 
-                if prod_name:
-                    conn.execute(
-                        "UPDATE products SET prod_name = ? WHERE prod_id = ?",
-                        (prod_name, prod_id),
-                    )
-                if prod_upc:
-                    conn.execute(
-                        "UPDATE products SET prod_upc = ? WHERE prod_id = ?",
-                        (prod_upc, prod_id)
-                        )
-                if prod_quantity:
-                    conn.execute(
-                        "UPDATE products SET prod_quantity = ? WHERE prod_id = ?",
-                        (int(prod_quantity), prod_id),
-                    )
-                if quick_take_qty:
-                    conn.execute(
-                        "UPDATE products SET quick_take_qty = ? WHERE prod_id = ?",
-                        (int(quick_take_qty), prod_id),
-                    )
-                if reorder_qty:
-                    conn.execute(
-                            "UPDATE products SET reorder_qty = ? WHERE prod_id = ?",
-                            (int(reorder_qty), prod_id),
-                    )
-                if restock_qty:
-                    conn.execute(
-                            "UPDATE products SET restock_qty = ? WHERE prod_id = ?",
-                            (int(restock_qty), prod_id),
-                    )
-                if location:
-                    conn.execute(
-                        "UPDATE products SET location = ? WHERE prod_id = ?",
-                        (location, prod_id),
-                    )
-                if categories:
-                    conn.execute(
-                        "UPDATE products SET categories = ? WHERE prod_id = ?",
-                        (categories, prod_id),
-                    )
+                item = prod_id[2]
+                if prod_name[2]:
+                    _, column, value = prod_name
+                    update_db(column, value, item)
+                if prod_upc[2]:
+                    _, column, value = prod_upc
+                    update_db(column, value, item)
+                if prod_quantity[2]:
+                    _, column, value = prod_quantity
+                    update_db(column, value, item)
+                if quick_take_qty[2]:
+                    _, column, value = quick_take_qty
+                    update_db(column, value, item)
+                if reorder_qty[2]:
+                    _, column, value = reorder_qty
+                    update_db(column, value, item)
+                if restock_qty[2]:
+                    _, column, value = restock_qty
+                    update_db(column, value, item)
+                if location[2]:
+                    _, column, value = location
+                    update_db(column, value, item)
+                if categories[2]:
+                    _, column, value = categories
+                    update_db(column, value, item)
 
                 return redirect(VIEWS["Stock"])
 
