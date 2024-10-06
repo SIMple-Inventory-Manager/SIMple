@@ -382,7 +382,7 @@ def delete():
                             (displaced_qty[products_], products_),
                         )
                     conn.execute("DELETE FROM location WHERE loc_id = ?", location_id)
-                return redirect(VIEWS["Warehouses"])
+                return redirect(VIEWS["Locations"])
 
             case _:
                 return redirect(VIEWS["Summary"])
@@ -402,7 +402,7 @@ def quick_change():
                 request.form["product_id"],
                 request.form["custom_qty"]
             )
-    if quick_change_type == "upc_search":
+    elif quick_change_type == "upc_search":
         upc = request.form["quick-take-bar"]
         if not upc:
             return redirect(VIEWS["Summary"])
@@ -469,7 +469,7 @@ def edit():
                     conn.execute(
                         "UPDATE location SET loc_name = ? WHERE loc_id = ?", (loc_name, loc_id)
                     )
-                return redirect(VIEWS["Warehouses"])
+                return redirect(VIEWS["Locations"])
 
             case "product":
                 (prod_id,
