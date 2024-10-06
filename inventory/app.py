@@ -44,7 +44,8 @@ def init_database():
         "vendor_url TEXT, "
         "purchase_cost INTEGER, "
         "sale_price INTEGER, "
-        "unallocated_quantity INTEGER)"
+        "unallocated_quantity INTEGER, "
+        "FOREIGN KEY(location) REFERENCES location(loc_id))"
     )
     LOCATIONS = "location(loc_id INTEGER PRIMARY KEY AUTOINCREMENT, loc_name TEXT UNIQUE NOT NULL)"
     LOGISTICS = (
@@ -60,34 +61,74 @@ def init_database():
         "FOREIGN KEY(to_loc_id) REFERENCES location(loc_id))"
     )
     CATEGORIES = (
-        "categories=("
+        "category("
         "cat_id INTEGER PRIMARY KEY AUTOINCREMENT, "
         "category_name TEXT UNIQUE NOT NULL) "
         )
+    SET_CATEGORIES = (
+        "prod_categories("
+        "set_id INTEGER PRIMARY KEY AUTOINCREMENT, "
+        "prod_id INTEGER NOT NULL, "
+        "cat_id INTEGER NOT NULL, "
+        "FOREIGN KEY(prod_id) REFERENCES products(prod_id), "
+        "FOREIGN KEY(cat_id) REFERENCES categories(cat_id)) "
+        )
+    SETTINGS = (
+        "settings("
+        "setting_id INTEGER PRIMARY KEY AUTOINCREMENT, "
+        "setting_name TEXT NOT NULL, "
+        "setting_val INTEGER NOT NULL) "
+        )
 
     with sqlite3.connect(DATABASE_NAME) as conn:
-        for table_definition in [PRODUCTS, LOCATIONS, LOGISTICS]:
+        for table_definition in [PRODUCTS, LOCATIONS, LOGISTICS, CATEGORIES, SET_CATEGORIES, SETTINGS]:
             conn.execute(f"CREATE TABLE IF NOT EXISTS {table_definition}")
-
 
 app.init_db = init_database
 
+def get_existing():
+    with sqlite3.connect(DATABASE_NAME) as conn:
+        existing = conn.execute("SELECT * FROM settings").fetchall()
+        if len(existing) == 0:
+            for name, value in [["loc_set", 0], ["cat_set", 0]]:
+                conn.execute("INSERT INTO settings (setting_name, setting_val) VALUES (?, ?)", (name, value))
+
+        # loc_set, loc_id | cat_set, cat_id
+        loc_set = conn.execute("SELECT setting_val FROM settings WHERE setting_name = 'loc_set'").fetchone()[0]
+        cat_set = conn.execute("SELECT setting_val FROM settings WHERE setting_name = 'cat_set'").fetchone()[0]
+    return loc_set, cat_set
+
 @app.route("/", methods=["GET"])
 def summary():
+    loc_filter, cat_filter = get_existing()
+
     with sqlite3.connect(DATABASE_NAME) as conn:
-        warehouse = conn.execute("SELECT * FROM location").fetchall()
-        products = conn.execute("SELECT * FROM products ORDER BY prod_name ASC").fetchall()
-        q_data = conn.execute(
-            "SELECT prod_name, unallocated_quantity, prod_quantity, reorder_qty, restock_qty, been_reordered FROM products"
-        ).fetchall()
+        location = conn.execute("SELECT * FROM location").fetchall()
+        if loc_filter:
+            location_selected = 1
+            print(f"{loc_filter}, {type(loc_filter)}")
+            products = conn.execute("SELECT * FROM products WHERE location = ? ORDER BY prod_name ASC", (str(loc_filter),)).fetchall()
+            loc_name = conn.execute("SELECT loc_name FROM location WHERE loc_id = ?", (str(loc_filter),)).fetchone()[0]
+        #Categories will likely be more difficult due to cross-table data
+        #if cat_filter:
+            #category_selected = 1
+            #products = conn.execute("SELECT * FROM prod_categories WHERE cat_id = ? ORDER BY prod_name ASC", (cat_filter)).fetchall()
+        else:
+            location_selected = 0
+            products = conn.execute("SELECT * FROM products ORDER BY prod_name ASC").fetchall()
+            loc_filter = ""
+            loc_name = "All Products"
 
     return render_template(
         "index.jinja",
         link=VIEWS,
         title="Summary",
-        warehouses=warehouse,
+        location_selected=location_selected,
+        filtered_loc_id= loc_filter,
+        filtered_loc_name=loc_name,
+        amount=len(products),
+        locations=location,
         products=products,
-        summary=q_data,
     )
 
 
@@ -361,6 +402,13 @@ def quick_change():
                 request.form["product_id"],
                 request.form["custom_qty"]
             )
+    if quick_change_type == "upc_search":
+        upc = request.form["quick-take-bar"]
+        if not upc:
+            return redirect(VIEWS["Summary"])
+        with sqlite3.connect(DATABASE_NAME) as conn:
+            prod_id, qty = conn.execute("SELECT prod_id, quick_take_qty FROM products WHERE prod_upc = ?", (upc, )).fetchall()[0]
+        quick_change_type = "subtract"
     else:
         prod_id, qty = (
             request.args.get("product"),
@@ -397,7 +445,6 @@ def quick_change():
                 conn.execute(
                     "UPDATE products SET been_reordered = 0, prod_quantity = ? WHERE prod_id = ?", (new_qty, prod_id)
                     )
-
 
         return redirect(VIEWS["Summary"])
 
@@ -487,6 +534,20 @@ def edit():
 
             case _:
                 return redirect(VIEWS["Summary"])
+
+@app.route('/set-filter', methods=["GET", "POST"])
+def set_filter():
+    loc_filter = request.form["location-filter"]
+    cat_filter = request.form["category-filter"]
+
+    if (loc_filter and int(loc_filter)) or int(loc_filter) == 0:
+        with sqlite3.connect(DATABASE_NAME) as conn:
+            conn.execute("UPDATE settings SET setting_val = ? WHERE setting_name = 'loc_set'", (loc_filter))
+    if (cat_filter and int(cat_filter) or cat_filter == 0):
+        with sqlite3.connect(DATABASE_NAME) as conn:
+            conn.execute("UPDATE settings SET setting_val = ? WHERE setting_name = 'cat_set'", (cat_filter))
+
+    return redirect(VIEWS["Summary"])
 
 with app.app_context():
     app.init_db()

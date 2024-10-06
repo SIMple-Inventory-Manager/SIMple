@@ -1,10 +1,35 @@
 {% extends 'base-template.jinja' %}
 {% block content %}
+    <div class="sidebar filter-sidebar" align="left">
+        <h4></h4>
+        <form action="{{url_for('quick_change', type='upc_search')}}" method="POST">
+            <input name="quick-take-bar" type="search" placeholder="Scan UPC Here" autofocus>
+            <input type="button" type="submit" accesskey="Enter" hidden>
+        </form>
+        <span class="needs-space"/>
+        <h4>Filters</h4>
+        <form action="{{url_for('set_filter')}}" method="POST">
+            <select name="location-filter" class="selectpicker">
+            {% if location_selected == 1 %}
+                <option value="{{ filtered_loc_id }}">{{ filtered_loc_name }}</option>
+            {% endif %}
+                <option value="0">All Products</option>
+            {% for loc_id, loc_name in locations %}
+                {% if loc_id != filtered_loc_id %}
+                <option value="{{loc_id}}">{{loc_name}}</option>
+                {% endif %}
+            {% endfor %}
+            </select>
+            <input name="category-filter" value="" hidden/>
+            <button type="submit" class="btn btn-success">Filter</button>
+        </form>
+    </div>
     <div class="container" style="float: contour;" align="center">
     <h3 align="center">Inventory</h3>
+    <h6 align="center">{{amount }} Products Shown</h6>
     <hr>
         <div class="form-horizontal" title="Item list">
-        {% if not summary %}
+        {% if not products %}
             <h3 align="center" class="font-weight-light">No Items</h3>
         {% else %}
         <div id="item-buttons">
