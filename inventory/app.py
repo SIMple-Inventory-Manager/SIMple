@@ -434,7 +434,7 @@ def quick_change():
                 get_state = conn.execute("SELECT been_reordered FROM products WHERE prod_id = ?", (prod_id)).fetchone()[0]
                 if get_state == 1:
                     new_state = 0
-                elif get_state == 0:
+                else:
                     new_state = 1
                 conn.execute(
                     "UPDATE products SET been_reordered = ? WHERE prod_id = ?", (new_state, prod_id)
