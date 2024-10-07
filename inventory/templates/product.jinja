@@ -10,6 +10,9 @@
             <form action = "{{ url_for('product') }}" method = "POST">
                 <div class="modal-dialog" role="document">
                     <div class="modal-content new-item">
+                    <div id="tr-close">
+                        <button class="btn" style="float: right" data-dismiss="modal">X</button>
+                    </div>
                         <h3 align="center">New Item</h3>
                         <div class="modal-body">
                         <table id="create-item">
@@ -35,7 +38,7 @@
                                 <td>Location:<span class="required">*</span></td><td>
                                 <select name="location" required>
                                 {% if not locations %}
-                                    <option value="stub">No locations available</option>
+                                    <option value="">No locations available</option>
                                 {% else %}
                                 {% for location in locations %}
                                         {% set location_id = location[0] %}
@@ -49,7 +52,7 @@
                                 <td> Categories:</td><td>
                                 <select name="categories">
                                 {% if not categories %}
-                                    <option value="stub">No categories available</option>
+                                    <option value="">No categories available</option>
                                     <!-- https://www.geeksforgeeks.org/how-to-use-checkbox-inside-select-option-using-javascript/ -->
                                 {% else %}
                                 {% for category in categories %}
@@ -144,6 +147,9 @@
                             <form action="{{ url_for('edit', type='product') }}" method="post" class="base_form">
                             <div class="modal-dialog" role="document">
                                 <div class="modal-content new-item">
+                                <div id="tr-close">
+                                    <button class="btn" style="float: right" data-dismiss="modal">X</button>
+                                </div>
                                     <h3 align="center">{{ prod_name }}</h3>
                                     {% if prod_qty < min_qty %}
                                         <div align="center"> Reordered: <input type="checkbox" name="reordered" action="{{url_for('quick_change', type='reorder')}}" {{ tickbox_state }}></div>
@@ -152,7 +158,7 @@
                                     <div class="modal-body">
                                     <table>
                                         <tr>
-                                            <td>Name:</span></td><td><input name="prod_name" placeholder="{{ prod_name }}" autofocus autocomplete="off"></td>
+                                            <td>Name:</span></td><td><input name="prod_name" value="{{ prod_name }}" autofocus autocomplete="off"></td>
                                         </tr>
                                         <tr>
                                             <td>UPC:</td><td> <input name="prod_upc" placeholder="{{ prod_upc }}" autocomplete="off"></td>
@@ -173,7 +179,7 @@
                                             <td>Location:</td><td>
                                             <select name="location">
                                             {% if not locations %}
-                                                <option value="stub">No locations available</option>
+                                                <option value="">No locations available</option>
                                             {% else %}
                                             {% for location in locations %}
                                                     {% set location_id = location[0] %}
@@ -187,7 +193,7 @@
                                             <td> Categories:</td><td>
                                             <select name="categories">
                                             {% if not categories %}
-                                                <option value="stub">No categories available</option>
+                                                <option value="">No categories available</option>
                                                 <!-- https://www.geeksforgeeks.org/how-to-use-checkbox-inside-select-option-using-javascript/ -->
                                             {% else %}
                                                 {% for category in categories %}
