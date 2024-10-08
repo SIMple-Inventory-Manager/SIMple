@@ -14,9 +14,11 @@ VIEWS = {
     "Summary": "/",
     "Stock": "/product",
     "Locations": "/location",
-    #"Settings": "/settings"
+    "Settings": "/settings"
 }
 EMPTY_SYMBOLS = {"", " ", None}
+
+VERSION = "0.1.9"
 
 app = Flask(__name__)
 
@@ -106,7 +108,6 @@ def summary():
         location = conn.execute("SELECT * FROM location").fetchall()
         if loc_filter:
             location_selected = 1
-            print(f"{loc_filter}, {type(loc_filter)}")
             products = conn.execute("SELECT * FROM products WHERE location = ? ORDER BY prod_name ASC", (str(loc_filter),)).fetchall()
             loc_name = conn.execute("SELECT loc_name FROM location WHERE loc_id = ?", (str(loc_filter),)).fetchone()[0]
         #Categories will likely be more difficult due to cross-table data
@@ -384,6 +385,16 @@ def delete():
                     conn.execute("DELETE FROM location WHERE loc_id = ?", location_id)
                 return redirect(VIEWS["Locations"])
 
+            case "category":
+                cat_id = request.args.get("cat_id")
+                if cat_id:
+                    conn.execute(
+                        "DELETE FROM prod_categories WHERE cat_id = ?", (cat_id,)
+                        )
+                    conn.execute(
+                        "DELETE FROM category WHERE cat_id = ?", (cat_id)
+                        )
+                return redirect(VIEWS["Settings"])
             case _:
                 return redirect(VIEWS["Summary"])
 
@@ -548,6 +559,40 @@ def set_filter():
             conn.execute("UPDATE settings SET setting_val = ? WHERE setting_name = 'cat_set'", (cat_filter))
 
     return redirect(VIEWS["Summary"])
+
+@app.route("/about", methods=["GET"])
+@app.route('/help', methods=["GET"])
+def help_page():
+    return render_template(
+        "about.jinja",
+        link=VIEWS,
+        title="SIMple Help",
+        version=VERSION
+        )
+
+@app.route("/settings", methods=["GET"])
+def settings_page():
+    with sqlite3.connect(DATABASE_NAME) as conn:
+        categories = conn.execute("SELECT * FROM category").fetchall()
+        locations = conn.execute("SELECT * FROM location").fetchall()
+    return render_template(
+        "settings.jinja",
+        link=VIEWS,
+        title="Settings",
+        categories=categories,
+        locations=locations
+        )
+@app.route("/categories", methods=["POST"])
+def categories():
+    with sqlite3.connect(DATABASE_NAME) as conn:
+        if request.method == "POST":
+            category_name = request.form["new_category"]
+
+            if category_name not in EMPTY_SYMBOLS:
+                conn.execute("INSERT INTO category (category_name) VALUES (?)", (category_name,))
+                return redirect(VIEWS["Settings"])
+
+    return redirect(VIEWS["Settings"])
 
 with app.app_context():
     app.init_db()

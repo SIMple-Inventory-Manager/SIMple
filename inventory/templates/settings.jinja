@@ -1,0 +1,52 @@
+{% extends 'base-template.jinja' %}
+{% block content %}
+<div class="container" style="float: contour;" align="center">
+    <h3 align="center">Settings</h3>
+    <hr>
+    <div id="category-settings" class="right">
+        <h5>Categories:</h5>
+            {% if categories %}
+            <table class="table small-table">
+                <th>Category Name</th><th></th><th></th>
+                {% for cat_id, cat_name in categories %}
+                <tr>
+                    <td>{{cat_name}}</td>
+                    <td> <a href="{{ url_for('delete', cat_id=cat_id, type='category') }}">
+                        <button name="button" type="button" class="btn btn-danger" value="delete">delete</button><br>
+                    </a>
+                    </td>
+                    <td>
+                    </td>
+                </tr>
+                {% endfor %}
+            {% else %}
+                <option>No Categories Available</option>
+            {% endif %}
+        </table>
+        <form action="{{ url_for('categories') }}" method="POST">
+            <input name="new_category" style="width: 175px;" class="needs-space">
+            <button class="btn btn-primary" type="submit">Add New</button>
+        </form>
+    </div>
+
+    <div id="location-settings" class="left">
+        <h5>Default Location Filter:</h5>
+        <p>Filter items on Home page by default.</p>
+            <form action="{{url_for('set_filter')}}" method="POST">
+                <select name="location-filter" class="selectpicker">
+                {% if location_selected == 1 %}
+                    <option value="{{ filtered_loc_id }}">{{ filtered_loc_name }}</option>
+                {% endif %}
+                    <option value="0">All Products</option>
+                {% for loc_id, loc_name in locations %}
+                    {% if loc_id != filtered_loc_id %}
+                    <option value="{{loc_id}}">{{loc_name}}</option>
+                    {% endif %}
+                {% endfor %}
+                </select>
+                <input name="category-filter" value="" hidden/>
+                <button type="submit" class="btn btn-success">Filter</button>
+            </form>
+        </div>
+</div>
+{% endblock %}

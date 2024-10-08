@@ -4,6 +4,31 @@
   padding-left: 70px;
 }
 
+.version-sidebar{
+    float: left;
+    position:fixed;
+    padding-top: 60px;
+    padding-left: 65px;
+}
+h4{
+    font-weight: bold;
+}
+h5{
+    font-weight: bold;
+    font-style: italic;
+}
+.version-number{
+    font-style: italic;
+    font-size: 0.85em;
+}
+.reference{
+    font-weight: bold;
+    font-style: italic;
+}
+.qt-example tr td{
+    width: 130px;
+    border: 1px solid black;
+}
 .content{
     margin-left: 25px;
 }
@@ -92,4 +117,13 @@
     height: 50px;
     width: 75px;
     margin: 2.5px;
+}
+
+.left{
+    float: right;
+    width: 50%;
+}
+.right{
+    float: left;
+    width: 50%;
 }

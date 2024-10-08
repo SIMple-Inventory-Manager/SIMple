@@ -112,3 +112,31 @@ function disable_custom(prod_id){
     document.getElementById("display-"+prod_id).innerHTML = "";
     document.getElementById("custom-insert-"+ prod_id).innerHTML = "";
 }
+
+function qt_example(){
+    blurb = "<p>Let's use these two items as an example:";
+    names = ["Name:", "AA Batteries", "Copy Paper"];
+    amount = ["Amount:", "132", "5"];
+    quick_take = ["Quick Take:", "2", "1"];
+
+    table = "<table class='qt-example'><tr>"
+    for (i=0; i<3; i++){
+        table += "<td>" + names[i] + "</td>";
+    }
+    table += "</tr><tr>"
+    for (i=0; i<3; i++){
+        table += "<td>" + amount[i] + "</td>";
+    }
+    table += "</tr><tr>"
+    for (i=0; i<3; i++){
+        table += "<td>" + quick_take[i] + "</td>";
+    }
+    table += "</tr></table>";
+
+    blurb += table;
+
+    blurb += "Because AA Batteries are usually used much quicker and used in pairs, the Quick Take amount is set to 2. When the UPC for batteries is scanned, the on-hand quantity is decreased by 2. Other numbers, like 1 or 3 or 16, can be selected within the item's Quick Edit menu on the home page.</p> <p>On the other hand, reams of Printer Paper are used less frequently, so a Quick Take amount of 1 should be fine. Scanning the UPC for a ream of printer paper, or using the Quick Edit menu, will default to decreasing the on-hand quantity by 1.</p>";
+
+    document.getElementById("quick-take-example").innerHTML = blurb;
+
+}
