@@ -1,6 +1,6 @@
 .filter-sidebar{
   float: left;
-  padding-top: 80px;
+  padding-top: 120px;
   padding-left: 70px;
 }
 
@@ -119,11 +119,21 @@ h5{
     margin: 2.5px;
 }
 
-.left{
+.category-select{
+    display: none;
+}
+.category-select input{
+    display:block;
+}
+.category-select input:hover{
+    background-color: darkgrey;
+}
+
+.right{
     float: right;
     width: 50%;
 }
-.right{
+.left{
     float: left;
     width: 50%;
 }
