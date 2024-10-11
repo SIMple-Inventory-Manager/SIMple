@@ -18,7 +18,7 @@ VIEWS = {
 }
 EMPTY_SYMBOLS = {"", " ", None}
 
-VERSION = "0.1.9"
+VERSION = "0.2.0"
 
 app = Flask(__name__)
 

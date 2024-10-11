@@ -59,13 +59,13 @@
                                 <td>Amount:<span class="required">*</span></td><td><input name="prod_quantity" placeholder="Current On Hand" type="number" required autocomplete="off"> </td>
                             </tr>
                             <tr>
-                                <td>Quick Take:<span class="required">*</span></td><td><input name="quick_take_qty" placeholder="Amount to remove quickly" type="number" required autocomplete="off"></td>
+                                <td>Quick Take:<span class="required">*</span></td><td><input name="quick_take_qty" placeholder="Amount to remove quickly" type="number" required autocomplete="off"> <a href="/about#quick-take" class="superscript">?</a></td>
                             </tr>
                             <tr>
-                                <td>Reorder At:<span class="required">*</span></td><td><input name="reorder_qty" placeholder="When to reorder" type="number" required autocomplete="off"> </td>
+                                <td>Reorder At:<span class="required">*</span></td><td><input name="reorder_qty" placeholder="When to reorder" type="number" required autocomplete="off"> <a href="/about#reorder" class="superscript">?</a></td>
                             </tr>
                             <tr>
-                                <td>Reorder Amount:</td><td><input name="restock_qty" placeholder="Amount in Box" type="number" autocomplete="off"></td>
+                                <td>Restock Amount:</td><td><input name="restock_qty" placeholder="Amount in Box" type="number" autocomplete="off"> <a href="/about#restock" class="superscript">?</a></td>
                             </tr>
                             <tr>
                                 <td>Location:<span class="required">*</span></td><td>
@@ -93,7 +93,7 @@
                                         <option value="{{ cat_id }}"> {{ cat_name }}</option>
                                     {% endfor %}
                                 {% endif %}}
-                                </select></td>
+                                </select> <a href="/about#sorting" class="superscript">?</a></td>
                             </tr>
                             </table>
                         <a href="javascript:enable_advanced('create')" id="advanced-items-toggle-create">Advanced Items ▼</a>
@@ -222,13 +222,13 @@
                                             <td>Amount:</td><td><input name="prod_quantity" placeholder="{{ prod_qty}}" type="number" autocomplete="off"> </td>
                                         </tr>
                                         <tr>
-                                            <td>Quick Take:</td><td><input name="quick_take_qty" placeholder="{{ quick_take_qty }}" type="number" autocomplete="off"></td>
+                                            <td>Quick Take:</td><td><input name="quick_take_qty" placeholder="{{ quick_take_qty }}" type="number" autocomplete="off"> <a href="/about#quick-take" class="superscript">?</a></td>
                                         </tr>
                                         <tr>
-                                            <td>Reorder At:</td><td><input name="reorder_qty" placeholder="{{ min_qty }}" type="number" autocomplete="off"> </td>
+                                            <td>Reorder At:</td><td><input name="reorder_qty" placeholder="{{ min_qty }}" type="number" autocomplete="off"> <a href="/about#reorder" class="superscript">?</a></td>
                                         </tr>
                                         <tr>
-                                            <td>Reorder Amount:</td><td><input name="restock_qty" placeholder="{{ restock_qty }}" type="number" autocomplete="off"></td>
+                                            <td>Restock Amount:</td><td><input name="restock_qty" placeholder="{{ restock_qty }}" type="number" autocomplete="off"> <a href="/about#restock" class="superscript">?</a></td>
                                         </tr>
                                         <tr>
                                             <td>Location:</td><td>

@@ -46,7 +46,7 @@
     </p>
     <h5><a name="quick-take">Quick Take</a></h5>
     <hr>
-    <p name="quick-take">
+    <p id="quick-take">
         The amount assigned to <b>Quick Take</b> is the amount that will automatically be taken away when an existing item's UPC is scanned, or will be a value in the "Quick Take" screen on the home page. This is intended to make taking product, or even returning an unused product, as simple of a process as possible.
 
         <a href="javascript:qt_example()">Click here for an example</a>
@@ -54,28 +54,28 @@
     </p>
     <h5><a name="reorder-quantity">Reorder At</a></h5>
     <hr>
-    <p name="reorder-quantity">
+    <p id="reorder">
     When the on-hand quantity reaches the amount assigned to <b>Reorder At</b>, the button on the home page will turn <span class="low"><b>yellow</b></span>, indicating it should be reordered soon. This will also create a "Reorder" button within the item's Quick Edit menu. Once the "Reorder" button has been selected (hopefully after actually reordering more), a visual icon (<img id="reorder-icon" src="{{ url_for('static', filename='reordered.png')}}">) will appear on both the button on the home page and the item's listing on the Product page, and the "Reorder" button on the Quick Edit menu will be replaced with a "Restock" button.</p>
     <p>
     The button on the home page will turn <span class="warning"><b>orange</b></span> if the on-hand quantity falls below half of the <b>Reorder At</b> amount, and finally turn <span class="out" style="color: white;"><b>red</b></span> if completely out.
     </p>
-    <h5><a name="restock">Reorder Amount - a.k.a. Restock</a></h5>
+    <h5><a name="restock">Restock Amount</a></h5>
     <hr>
-    <p name="restock">
-    The <b>Reorder Amount</b> is not required, but is recommended in order to make using SIMple easier, especially if the items come in known quantities. For example, reams of Printer Paper can come in boxes of 5, so setting the <b>Reorder Amount</b> on Printer Paper to 5 will cover one box, or if Printer Paper is a commonly used item, setting the <b>Reorder Amount</b> to 15 will cover three boxes.
+    <p id="restock">
+    The <b>Restock Amount</b> is not required, but is recommended in order to make using SIMple easier, especially if the items come in known quantities. For example, reams of Printer Paper can come in boxes of 5, so setting the <b>Restock Amount</b> on Printer Paper to 5 will cover one box, or if Printer Paper is a commonly used item, setting the <b>Restock Amount</b> to 15 will cover three boxes.
     </p>
     <h5><a name="sorting">Sorting</a></h5>
     <hr>
-    <p name="sorting">
+    <p id="sorting">
     Sorting is a way to make it easier to locate items, especially if there are a lot of items in the SIMple database.
     </p>
     <p>
     Currently, it is only possible to sort by location, but eventually it should be possible to sort by category of item as well, if the items are added to a category when originally added, or later in the Item Editor.
     </p>
-    <h4><a name="final-thoughts">Final Thoughts</a></h4>
+    <h4><a id="final-thoughts">Final Thoughts</a></h4>
     <hr>
     <p>
-    SIMple is a labor of love with a lot of interesting features planned in the future. Feel free to check out source code or future plans at the <a href="https://github.com/RiderExMachina/SIMple">Github repository</a>. If you know HTML, CSS, JS, or Python, good contributions are always welcome.
+    SIMple is a labor of love with several interesting features planned in the future. Feel free to check out source code or future plans at the <a href="https://github.com/SIMple-Inventory-Manager/SIMple">Github repository</a>. If you know HTML, CSS, JS, or Python, good contributions are always welcome.
     </p>
-
+</div>
 {% endblock %}
