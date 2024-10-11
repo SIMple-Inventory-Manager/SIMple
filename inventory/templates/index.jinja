@@ -2,26 +2,36 @@
 {% block content %}
     <div class="sidebar filter-sidebar" align="left">
         <form action="{{url_for('quick_change', type='upc_search')}}" method="POST">
-            <input name="quick-take-bar" type="search" placeholder="Scan UPC Here" autofocus>
+            <input name="quick-take-bar" type="search" placeholder="Scan UPC Here" required autofocus autocomplete="off">
             <input type="button" type="submit" accesskey="Enter" hidden>
         </form>
         <span class="needs-space"/>
         <h4>Filters</h4>
-        <form action="{{url_for('set_filter')}}" method="POST">
-            <select name="location-filter" class="selectpicker">
-            {% if location_selected == 1 %}
-                <option value="{{ filtered_loc_id }}">{{ filtered_loc_name }}</option>
+        <form action="{{url_for('quick_filter', type='loc_cat', page='home')}}" method="POST">
+            <select name="location-filter">
+            {% if extras["loc_filter"] == 1 %}
+                <option value="{{ extras['filtered_loc_id'] }}">{{ extras['filtered_loc_name'] }}</option>
             {% endif %}
                 <option value="0">All Products</option>
             {% for loc_id, loc_name in locations %}
-                {% if loc_id != filtered_loc_id %}
+                {% if loc_name != extras['filtered_loc_name'] %}
                 <option value="{{loc_id}}">{{loc_name}}</option>
                 {% endif %}
             {% endfor %}
-            </select>
-            <input name="category-filter" value="" hidden/>
-            <button type="submit" class="btn btn-success">Filter</button>
-        </form>
+            </select><br>
+        <select name="category-filter">
+            {% if extras["cat_filter"] == 1 %}
+                <option value="{{ extras['filtered_cat_id']}}">{{ extras['filtered_cat_name']}}</option>
+            {% endif %}
+            <option value="0">All Categories</option>
+            {% for cat_id, cat_name in categories %}
+                {% if cat_name != extras['filtered_cat_name'] %}
+                    <option value="{{ cat_id }}">{{ cat_name }}</option>
+                {% endif %}
+            {% endfor %}
+        </select>
+    <button type="submit" class="btn btn-success">filter</button>
+    </form>
     </div>
     <div class="container" style="float: contour;" align="center">
     <h3 align="center">Inventory</h3>
@@ -44,8 +54,8 @@
                 {% set quick_take_qty = product[4]|int %}
                 {% set min_qty        = product[5]|int %}
                 {% set reorder_qty    = product[6]|int %}
-                {% set location       = product[7] %}
-                {% set categories     = product[8] %}
+                {% set prod_loc       = product[7] %}
+                {% set prod_cat       = product[8] %}
                 {% set been_reordered = product[9]|int %}
 
                 {% if prod_qty >= min_qty %}
@@ -163,8 +173,6 @@
                         </div>
                     </div>
                 </div>
-
-
                 </div>
         {% endfor %}
         </div>

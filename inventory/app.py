@@ -104,40 +104,47 @@ def get_existing():
 def summary():
     loc_filter, cat_filter = get_existing()
 
+    return_args = {}
     with sqlite3.connect(DATABASE_NAME) as conn:
         location = conn.execute("SELECT * FROM location").fetchall()
+        categories = conn.execute("SELECT * FROM category").fetchall()
         if loc_filter:
-            location_selected = 1
+            return_args["loc_filter"] = 1
+            return_args["filtered_loc_id"] = loc_filter
+            return_args["filtered_loc_name"] = conn.execute("SELECT loc_name FROM location WHERE loc_id = ?", (str(loc_filter),)).fetchone()[0]
             products = conn.execute("SELECT * FROM products WHERE location = ? ORDER BY prod_name ASC", (str(loc_filter),)).fetchall()
-            loc_name = conn.execute("SELECT loc_name FROM location WHERE loc_id = ?", (str(loc_filter),)).fetchone()[0]
         #Categories will likely be more difficult due to cross-table data
         #if cat_filter:
             #category_selected = 1
             #products = conn.execute("SELECT * FROM prod_categories WHERE cat_id = ? ORDER BY prod_name ASC", (cat_filter)).fetchall()
         else:
-            location_selected = 0
+            return_args["loc_filter"] = 0
             products = conn.execute("SELECT * FROM products ORDER BY prod_name ASC").fetchall()
-            loc_filter = ""
-            loc_name = "All Products"
 
     return render_template(
         "index.jinja",
         link=VIEWS,
         title="Summary",
-        location_selected=location_selected,
-        filtered_loc_id= loc_filter,
-        filtered_loc_name=loc_name,
-        amount=len(products),
+        extras=return_args,
         locations=location,
+        categories=categories,
         products=products,
     )
+
+def assign_categories(prod_id, categories):
+    with sqlite3.connect(DATABASE_NAME) as conn:
+        categories = categories.split(",")
+        for cat_id in categories:
+            if cat_id != "":
+                pass
+
 
 
 @app.route("/product", methods=["POST", "GET"])
 def product():
     with sqlite3.connect(DATABASE_NAME) as conn:
         warehouse = conn.execute("SELECT * FROM location").fetchall()
-    
+        category = conn.execute("SELECT * FROM category").fetchall()
 
     with sqlite3.connect(DATABASE_NAME) as conn:
         if request.method == "POST":
@@ -149,7 +156,8 @@ def product():
             reorder_qty,
             restock_qty,
             location,
-            categories) = (
+            prod_categories,
+            advanced) = (
                         request.form["prod_name"],
                         request.form["prod_upc"],
                         request.form["prod_quantity"],
@@ -157,8 +165,28 @@ def product():
                         request.form["reorder_qty"],
                         request.form["restock_qty"],
                         request.form["location"],
-                        request.form["categories"]
+                        request.form["categories"],
+                        request.form["advanced"]
                         )
+            if advanced == "True":
+                (vendor,
+                 vendor_url,
+                 purchase_cost,
+                 sale_price) = (
+                     request.form["vendor"],
+                     request.form["vendor_url"],
+                     request.form["purchase_cost"],
+                     request.form["sale_price"]
+                     )
+            else:
+                (vendor,
+                 vendor_url,
+                 purchase_cost,
+                 sale_price,) = (
+                     "",
+                     "",
+                     "",
+                     "")
             ## Verify Data
             transaction_allowed = True
             for value in [prod_name, prod_upc, prod_quantity, quick_take_qty, reorder_qty, restock_qty, location]:
@@ -190,18 +218,23 @@ def product():
 
             if transaction_allowed:
                 conn.execute(
-                    "INSERT INTO products (prod_name, prod_upc, prod_quantity, quick_take_qty, reorder_qty, restock_qty, location, categories) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-                    (prod_name, prod_upc, prod_quantity, quick_take_qty, reorder_qty, restock_qty, location, categories),
+                    "INSERT INTO products (prod_name, prod_upc, prod_quantity, quick_take_qty, reorder_qty, restock_qty, location, vendor, vendor_url, purchase_cost, sale_price) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                    (prod_name, prod_upc, prod_quantity, quick_take_qty, reorder_qty, restock_qty, location, vendor, vendor_url, purchase_cost, sale_price)
                 )
+                if prod_categories:
+                    prod_id = conn.execute("SELECT prod_id FROM product WHERE prod_name = ?", (prod_name,)).fetchone()
+                    assign_categories(prod_id, prod_categories)
                 return redirect(VIEWS["Stock"])
 
-        products = conn.execute("SELECT * FROM products").fetchall()
-
+        products = conn.execute("SELECT * FROM products ORDER BY prod_name ASC").fetchall()
+    return_args = {}
     return render_template(
         "product.jinja",
         link=VIEWS,
         products=products,
+        extras=return_args,
         locations=warehouse,
+        categories=category,
         title="Stock",
     )
 
@@ -217,12 +250,20 @@ def location():
                 return redirect(VIEWS["Locations"])
 
         warehouse_data = conn.execute("SELECT * FROM location").fetchall()
+        categories = conn.execute("SELECT * FROM category").fetchall()
+
+        amt_in_loc = {}
+        for loc_id, _ in warehouse_data:
+            products = conn.execute("SELECT prod_id FROM products WHERE location = ?", (loc_id,)).fetchall()
+            amt_in_loc[loc_id] = len(products)
 
     return render_template(
         "location.jinja",
         link=VIEWS,
         warehouses=warehouse_data,
-        title="Locations",
+        prod_amt=amt_in_loc,
+        categories=categories,
+        title="Locations"
     )
 
 
@@ -403,7 +444,7 @@ def quick_change():
     def update_qty(prod_id, qty):
         conn.execute(
                 "UPDATE products SET prod_quantity = ? WHERE prod_id = ?",
-                (qty,  prod_id),
+                (qty, prod_id),
             )
 
     quick_change_type = request.args.get("type")
@@ -418,7 +459,18 @@ def quick_change():
         if not upc:
             return redirect(VIEWS["Summary"])
         with sqlite3.connect(DATABASE_NAME) as conn:
-            prod_id, qty = conn.execute("SELECT prod_id, quick_take_qty FROM products WHERE prod_upc = ?", (upc, )).fetchall()[0]
+            prod_id = conn.execute("SELECT prod_id FROM products WHERE prod_upc = ?", (upc, )).fetchone()[0]
+            if prod_id:
+                qty = conn.execute("SELECT quick_take_qty FROM products WHERE prod_id = ?", (prod_id,) ).fetchone()[0]
+            else:
+                error_type = "Item not found"
+                return render_template(
+                    'modal.jinja',
+                    link=VIEWS,
+                    error_code=error_type,
+                    transaction_message=f"Unable to locate item with UPC '<b>{upc}</b>'",
+                    previous=VIEWS["Summary"]
+                    )
         quick_change_type = "subtract"
     else:
         prod_id, qty = (
@@ -459,12 +511,10 @@ def quick_change():
 
         return redirect(VIEWS["Summary"])
 
-
-
-
 @app.route("/edit", methods=["POST"])
 def edit():
-    def update_db(column, value, prod_id):
+    def update_db(prod_id, column, value):
+        print(f"{column}, {value}")
         conn.execute(
                     f"UPDATE products SET {column} = ? WHERE prod_id = ?",
                     (value, prod_id),
@@ -491,7 +541,9 @@ def edit():
                 reorder_qty,
                 restock_qty,
                 location,
-                categories) = (
+                category,
+                advanced
+                ) = (
                             ["Product ID", "prod_id", request.form["prod_id"]],
                             ["Product Name", "prod_name", request.form["prod_name"]],
                             ["Product UPC", "prod_upc", request.form["prod_upc"]],
@@ -500,8 +552,29 @@ def edit():
                             ["Minimum Quantity", "reorder_qty", request.form["reorder_qty"]],
                             ["Restock Quantity", "restock_qty", request.form["restock_qty"]],
                             ["Location", "location", request.form["location"]],
-                            ["Categories", "categories", request.form["categories"]]
+                            ["Category", "categories", request.form["categories"]],
+                            request.form["advanced"]
                             )
+                if advanced == "True":
+                    (vendor,
+                    vendor_url,
+                    purchase_cost,
+                    sale_price) = (
+                        ["Vendor", 'vendor', request.form["vendor"]],
+                        ["Vendor URL", "vendor_url", request.form["vendor_url"]],
+                        ["Cost to Buy", "purchase_cost", request.form["purchase_cost"]],
+                        ["Price to Sell", "sale_price", request.form["sale_price"]]
+                        )
+                else:
+                    (vendor,
+                    vendor_url,
+                    purchase_cost,
+                    sale_price,) = (
+                        ["Vendor", 'vendor', False],
+                        ["Vendor URL", "vendor_url", False],
+                        ["Cost to Buy", "purchase_cost", False],
+                        ["Price to Sell", "sale_price", False]
+                        )
                 ## Validate Data
                 for name, _, value in [prod_quantity, quick_take_qty, reorder_qty, restock_qty]:
                     if value not in EMPTY_SYMBOLS:
@@ -514,32 +587,47 @@ def edit():
                                             transaction_message=f"Unable to change {name}. Value '{value}' is invalid.",
                                             previous=VIEWS["Stock"]
                                         )
-
+                changes_queue = {}
                 item = prod_id[2]
                 if prod_name[2]:
                     _, column, value = prod_name
-                    update_db(column, value, item)
+                    changes_queue[column] = value
                 if prod_upc[2]:
                     _, column, value = prod_upc
-                    update_db(column, value, item)
+                    changes_queue[column] = value
                 if prod_quantity[2]:
                     _, column, value = prod_quantity
-                    update_db(column, value, item)
+                    changes_queue[column] = value
                 if quick_take_qty[2]:
                     _, column, value = quick_take_qty
-                    update_db(column, value, item)
+                    changes_queue[column] = value
                 if reorder_qty[2]:
                     _, column, value = reorder_qty
-                    update_db(column, value, item)
+                    changes_queue[column] = value
                 if restock_qty[2]:
                     _, column, value = restock_qty
-                    update_db(column, value, item)
+                    changes_queue[column] = value
                 if location[2]:
                     _, column, value = location
-                    update_db(column, value, item)
-                if categories[2]:
-                    _, column, value = categories
-                    update_db(column, value, item)
+                    changes_queue[column] = value
+                if category[2]:
+                    _, column, value = category
+                    changes_queue[column] = value
+                if vendor[2]:
+                    _, column, value = vendor
+                    changes_queue[column] = value
+                if vendor_url[2]:
+                    _, column, value = vendor_url
+                    changes_queue[column] = value
+                if purchase_cost[2]:
+                    _, column, value = purchase_cost
+                    changes_queue[column] = value
+                if sale_price[2]:
+                    _, column, value = sale_price
+                    changes_queue[column] = value
+
+                for col, val in changes_queue.items():
+                    update_db(item, col, val)
 
                 return redirect(VIEWS["Stock"])
 
@@ -558,7 +646,95 @@ def set_filter():
         with sqlite3.connect(DATABASE_NAME) as conn:
             conn.execute("UPDATE settings SET setting_val = ? WHERE setting_name = 'cat_set'", (cat_filter))
 
-    return redirect(VIEWS["Summary"])
+    return redirect(VIEWS["Settings"])
+
+@app.route("/quick-filter", methods=["POST"])
+def quick_filter():
+    filter_type = request.args.get("type")
+    return_page = request.args.get("page")
+
+    return_args = {}
+
+    with sqlite3.connect(DATABASE_NAME) as conn:
+        match filter_type:
+            case "upc_search":
+                prod_filter = request.form["quick-search-bar"]
+                filtered_items = conn.execute("SELECT * FROM products WHERE prod_upc = ?", (prod_filter,)).fetchall()
+            case "loc_cat":
+                prod_filter = request.form["location-filter"]
+                cat_filter = request.form["category-filter"]
+                if prod_filter != "0":
+                    return_args["loc_filter"] = 1
+                    return_args["filtered_loc_id"] = prod_filter
+                    return_args["filtered_loc_name"] = conn.execute(
+                        "SELECT loc_name FROM location WHERE loc_id = ?", (prod_filter,)
+                        ).fetchone()[0]
+                else:
+                    return_args["loc_filter"] = 0
+                if cat_filter != "0":
+                    return_args["cat_filter"] = 1
+                    return_args["filtered_cat_id"] = cat_filter
+                    return_args["filtered_cat_name"] = conn.execute(
+                        "SELECT category_name FROM category WHERE cat_id = ?", (cat_filter,)
+                        ).fetchone()[0]
+                else:
+                    return_args["cat_filter"] = 0
+
+                if return_args["loc_filter"] and not return_args["cat_filter"]:
+                    filtered_items = conn.execute(
+                        "SELECT * FROM products WHERE location = ? ORDER BY prod_name ASC", (prod_filter,)
+                        ).fetchall()
+                elif not return_args["loc_filter"] and return_args["cat_filter"]:
+                     filtered_items = conn.execute(
+                        "SELECT * FROM products WHERE categories = ? ORDER BY prod_name ASC", (cat_filter,)
+                        ).fetchall()
+                elif return_args["loc_filter"] and return_args["cat_filter"]:
+                    filtered_items = conn.execute(
+                        "SELECT * FROM products WHERE location = ? AND categories = ? ORDER BY prod_name ASC", (prod_filter, cat_filter)
+                        ).fetchall()
+
+                else:
+                   match return_page:
+                       case "home":
+                           return redirect(VIEWS["Summary"])
+                       case "product":
+                           return redirect(VIEWS["Stock"])
+            case _:
+                return redirect(VIEWS["Summary"])
+
+
+        location = conn.execute(
+            "SELECT * FROM location"
+            ).fetchall()
+        categories = conn.execute(
+            "SELECT * FROM category"
+            ).fetchall()
+        match return_page:
+            case "home":
+                return render_template(
+                    "index.jinja",
+                    link=VIEWS,
+                    title="Summary",
+                    extras=return_args,
+                    amount=len(filtered_items),
+                    locations=location,
+                    categories=categories,
+                    products=filtered_items,
+                    )
+
+            case "product":
+                return render_template(
+                    "product.jinja",
+                    link=VIEWS,
+                    title="Stock",
+                    extras=return_args,
+                    locations=location,
+                    categories=categories,
+                    products=filtered_items,
+                    )
+            case _:
+                return redirect(VIEWS["Summary"])
+
 
 @app.route("/about", methods=["GET"])
 @app.route('/help', methods=["GET"])

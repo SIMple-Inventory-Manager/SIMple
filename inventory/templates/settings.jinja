@@ -25,7 +25,7 @@
         </table>
         <form action="{{ url_for('categories') }}" method="POST">
             <input name="new_category" style="width: 175px;" class="needs-space">
-            <button class="btn btn-primary" type="submit">Add New</button>
+            <button class="btn btn-primary" type="submit">add new</button>
         </form>
     </div>
 
@@ -33,7 +33,7 @@
         <h5>Default Location Filter:</h5>
         <p>Filter items on Home page by default.</p>
             <form action="{{url_for('set_filter')}}" method="POST">
-                <select name="location-filter" class="selectpicker">
+                <select name="location-filter">
                 {% if location_selected == 1 %}
                     <option value="{{ filtered_loc_id }}">{{ filtered_loc_name }}</option>
                 {% endif %}
@@ -45,7 +45,7 @@
                 {% endfor %}
                 </select>
                 <input name="category-filter" value="" hidden/>
-                <button type="submit" class="btn btn-success">Filter</button>
+                <button type="submit" class="btn btn-success">filter</button>
             </form>
         </div>
 </div>
