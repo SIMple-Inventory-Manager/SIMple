@@ -7,7 +7,7 @@
         </form>
         <span class="needs-space"/>
         <h4>Filters</h4>
-        <form action="{{url_for('quick_filter', type='loc_cat', page='home')}}" method="POST">
+        <form action="{{url_for('summary', type='filter', filter='loc_cat')}}" method="POST">
             <select name="location-filter">
             {% if extras["loc_filter"] == 1 %}
                 <option value="{{ extras['filtered_loc_id'] }}">{{ extras['filtered_loc_name'] }}</option>
