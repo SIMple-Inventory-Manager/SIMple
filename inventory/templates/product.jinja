@@ -1,13 +1,13 @@
 {% extends 'base-template.jinja' %}
 {% block content %}
 <div class="sidebar filter-sidebar">
-    <form action="{{url_for('quick_filter', type='upc_search', page='product')}}" method="POST">
+    <form action="{{url_for('product', type= 'filter', filter='upc_search')}}" method="POST">
         <input name="quick-search-bar" type="search" placeholder="Scan UPC Here" required autofocus autocomplete="off">
         <input type="button" type="submit" accesskey="Enter" hidden>
     </form>
     <span class="needs-space"/>
     <h4>Filters</h4>
-    <form action="{{url_for('quick_filter', type='loc_cat', page='product')}}" method="POST">
+    <form action="{{url_for('product', type='filter', filter='loc_cat')}}" method="POST">
         <select name="location-filter">
         {% if extras["loc_filter"] == 1 %}
             <option value="{{ extras['filtered_loc_id'] }}">{{ extras['filtered_loc_name'] }}</option>
@@ -40,7 +40,7 @@
         <button class="btn btn-success" value="create" data-toggle="modal" data-target="#create">add new</button>
     </div>
         <div id="create" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="trans_message" aria-hidden="true">
-            <form action = "{{ url_for('product') }}" method = "POST">
+            <form action = "{{ url_for('product', type='create') }}" method = "POST">
                 <div class="modal-dialog" role="document">
                     <div class="modal-content new-item">
                     <div id="tr-close">
@@ -84,11 +84,11 @@
                                 <td> Categories:</td><td>
                                 <select name="categories">
                                 {% if not categories %}
-                                    <option>No categories available</option>
+                                    <option value="">No categories available</option>
                                     <!-- https://www.geeksforgeeks.org/how-to-use-checkbox-inside-select-option-using-javascript/ -->
                                     <!-- https://getbootstrap.com/docs/4.0/components/dropdowns/ -->
                                 {% else %}
-                                    <option>No category selected</option>
+                                    <option value="">No category selected</option>
                                     {% for cat_id, cat_name in categories %}
                                         <option value="{{ cat_id }}"> {{ cat_name }}</option>
                                     {% endfor %}
@@ -234,11 +234,11 @@
                                             <td>Location:</td><td>
                                             <select name="location">
                                             {% if not locations %}
-                                                <option>No locations available</option>
+                                                <option value="-">No locations available</option>
                                             {% else %}
                                                 {% for loc_id, loc_name in locations %}
                                                     {% if prod_loc|int == loc_id %}
-                                                        <option value="{{ loc_id }}">{{ loc_name }}</option>
+                                                        <option value="-">{{ loc_name }}</option>
                                                     {% endif %}
                                                 {% endfor %}
                                                 {% for loc_id, loc_name in locations %}
@@ -259,11 +259,11 @@
                                                 {% if prod_cat != 0 %}
                                                     {% for cat_id, cat_name in categories %}
                                                         {% if cat_id|int == prod_cat %}
-                                                            <option value="{{ cat_id }}">{{ cat_name }}</option>
+                                                            <option value="-">{{ cat_name }}</option>
                                                         {% endif %}
                                                     {% endfor %}
                                                 {% else %}
-                                                    <option>No category selected</option>
+                                                    <option value="-">No category selected</option>
                                                 {% endif %}
                                                 {% for cat_id, cat_name in categories %}
                                                     {% if cat_id|int != prod_cat %}
