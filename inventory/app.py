@@ -547,8 +547,7 @@ def quick_change():
 @app.route("/edit", methods=["POST"])
 def edit():
     def update_db(prod_id, column, value):
-        print(f"{column}, {value}")
-        conn.execute(
+       conn.execute(
                     f"UPDATE products SET {column} = ? WHERE prod_id = ?",
                     (value, prod_id),
                     )
@@ -607,7 +606,6 @@ def edit():
                 for column in vars(prod).keys():
                     value = vars(prod)[column]
                     if value not in EMPTY_SYMBOLS and column != 'prod_id':
-                        print(f"Updating {column} with data '{value}'")
                         update_db(prod.prod_id, column, value)
 
                 return redirect(VIEWS["Stock"])
