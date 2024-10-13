@@ -18,7 +18,7 @@ VIEWS = {
 }
 EMPTY_SYMBOLS = {"", " ", None}
 
-VERSION = "0.2.0"
+VERSION = "0.2.1"
 
 app = Flask(__name__)
 
@@ -131,20 +131,11 @@ def summary():
         products=products,
     )
 
-def assign_categories(prod_id, categories):
-    with sqlite3.connect(DATABASE_NAME) as conn:
-        categories = categories.split(",")
-        for cat_id in categories:
-            if cat_id != "":
-                pass
-
-
-
 @app.route("/product", methods=["POST", "GET"])
 def product():
     with sqlite3.connect(DATABASE_NAME) as conn:
-        warehouse = conn.execute("SELECT * FROM location").fetchall()
-        category = conn.execute("SELECT * FROM category").fetchall()
+        warehouse = conn.execute("SELECT * FROM location ORDER BY loc_name ASC").fetchall()
+        category = conn.execute("SELECT * FROM category ORDER BY category_name ASC").fetchall()
 
     with sqlite3.connect(DATABASE_NAME) as conn:
         if request.method == "POST":
@@ -189,7 +180,7 @@ def product():
                      "")
             ## Verify Data
             transaction_allowed = True
-            for value in [prod_name, prod_upc, prod_quantity, quick_take_qty, reorder_qty, restock_qty, location]:
+            for name,  value in [("Name", prod_name), ("UPC", prod_upc), ("Quantity", quick_take_qty), ("Reorder Amount", reorder_qty)]:
                 if value in EMPTY_SYMBOLS:
                     transaction_allowed = False
                     error_type = "Required Field Left Empty"
@@ -203,9 +194,12 @@ def product():
             prod_quantity = int(prod_quantity)
             quick_take_qty = int(quick_take_qty)
             reorder_qty = int(reorder_qty)
-            restock_qty = int(restock_qty)
-            for num_validation in [prod_quantity, quick_take_qty, reorder_qty, restock_qty]:
-                if num_validation < 0:
+            if restock_qty:
+                restock_qty = int(restock_qty)
+            else:
+                restock_qty = 0
+            for name, value in [("Quantity", prod_quantity), ("Quick Take", quick_take_qty), ("Reorder Amount", reorder_qty), ("Restock Amount", restock_qty)]:
+                if value < 0:
                     transaction_allowed = False
                     error_type = "Negative Values"
                     return render_template(
@@ -218,11 +212,11 @@ def product():
 
             if transaction_allowed:
                 conn.execute(
-                    "INSERT INTO products (prod_name, prod_upc, prod_quantity, quick_take_qty, reorder_qty, restock_qty, location, vendor, vendor_url, purchase_cost, sale_price) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                    "INSERT INTO products (prod_name, prod_upc, prod_quantity, quick_take_qty, reorder_qty, restock_qty, location, vendor, vendor_url, purchase_cost, sale_price) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                     (prod_name, prod_upc, prod_quantity, quick_take_qty, reorder_qty, restock_qty, location, vendor, vendor_url, purchase_cost, sale_price)
                 )
-                if prod_categories:
-                    prod_id = conn.execute("SELECT prod_id FROM product WHERE prod_name = ?", (prod_name,)).fetchone()
+                if prod_categories != "":
+                    prod_id = conn.execute("SELECT prod_id FROM products WHERE prod_name = ?", (prod_name,)).fetchone()
                     assign_categories(prod_id, prod_categories)
                 return redirect(VIEWS["Stock"])
 
