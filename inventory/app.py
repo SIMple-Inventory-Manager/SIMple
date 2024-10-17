@@ -241,6 +241,62 @@ def summary():
         products=products,
     )
 
+def add_new(request):
+    prod = Product(
+        request.form["prod_name"],
+        request.form["prod_upc"],
+        request.form["prod_quantity"],
+        request.form["quick_take_qty"],
+        request.form["reorder_qty"],
+        request.form["restock_qty"],
+        request.form["location"],
+        request.form["categories"],
+    )
+    if request.form["advanced"] == "True":
+        prod.add_advanced(
+            request.form["vendor"],
+            request.form["vendor_url"],
+            request.form["purchase_cost"],
+            request.form["sale_price"]
+    )
+
+    transaction_allowed = True
+    for name,  value in [("Name", prod.prod_name), ("UPC", prod.prod_upc), ("Quantity", prod.quick_take_qty), ("Reorder Amount", prod.reorder_qty)]:
+        if value in EMPTY_SYMBOLS:
+            transaction_allowed = False
+            error_type = "Required Field Left Empty"
+            return render_template(
+                            'modal.jinja',
+                            link=VIEWS,
+                            error_code=error_type,
+                            transaction_message=f"Unable to set required field, {name}",
+                            previous=VIEWS["Stock"]
+                        )
+    prod_quantity = int(prod.prod_quantity)
+    quick_take_qty = int(prod.quick_take_qty)
+    reorder_qty = int(prod.reorder_qty)
+    if prod.restock_qty:
+        restock_qty = int(prod.restock_qty)
+    else:
+        restock_qty = 0
+    for name, value in [("Quantity", prod_quantity), ("Quick Take", quick_take_qty), ("Reorder Amount", reorder_qty), ("Restock Amount", restock_qty)]:
+        if value < 0:
+            transaction_allowed = False
+            error_type = "Negative Values"
+            return render_template(
+                            'modal.jinja',
+                            link=VIEWS,
+                            error_code=error_type,
+                            transaction_message=f"Unable to set {name}. Value '{value}' is invalid.",
+                            previous=VIEWS["Stock"]
+                        )
+    if transaction_allowed:
+        with sqlite3.connect(DATABASE_NAME) as conn:
+            conn.execute(
+                "INSERT INTO products (prod_name, prod_upc, prod_quantity, quick_take_qty, reorder_qty, restock_qty, location, vendor, categories, vendor_url, purchase_cost, sale_price) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                (prod.prod_name, prod.prod_upc, prod.prod_quantity, prod.quick_take_qty, prod.reorder_qty, prod.restock_qty, prod.location, prod.categories, prod.vendor, prod.vendor_url, prod.purchase_cost, prod.sale_price)
+            )
+
 @app.route("/product", methods=["POST", "GET"])
 def product():
     location, category, products = pull_current()
@@ -639,7 +695,7 @@ def help_page():
 
 @app.route("/settings", methods=["GET"])
 def settings_page():
-    location, categories, products = pull_current()
+    locations, categories, _ = pull_current()
 
     return render_template(
         "settings.jinja",
