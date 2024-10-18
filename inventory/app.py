@@ -716,5 +716,43 @@ def categories():
 
     return redirect(VIEWS["Settings"])
 
+@app.route("/reports", methods=["GET"])
+def reports():
+    locations, categories, products = pull_current()
+    total_cost = 0
+    total_net = 0
+    return_args = {}
+    with sqlite3.connect(DATABASE_NAME) as conn:
+        product_info = conn.execute("SELECT prod_quantity, purchase_cost FROM products WHERE purchase_cost != ''").fetchall()
+        return_args["itemized_costs"] = len(product_info)
+        for qty, cost in product_info:
+            if float(cost):
+                total_cost += round(float(cost) * int(qty), 2)
+        potential_revenue = conn.execute("SELECT prod_quantity, sale_price FROM products WHERE sale_price != ''").fetchall()
+        return_args["itemized_revenue"] = len(potential_revenue)
+        for qty, price in potential_revenue:
+            if float(price):
+                total_net += round(float(price) * int(qty), 2)
+    return_args["total_cost"] = total_cost
+    return_args["total_net"] = total_net
+    if total_cost > 1000:
+        return_args["cost_span"] = round(total_cost) / 100
+    else:
+        return_args["cost_span"] = round(total_cost)
+    if total_net > 1000:
+        return_args["net_span"] = round(total_net) / 100
+    else:
+        return_args["net_span"] = round(total_net)
+    return_args["total_loc"] = len(locations)
+    return_args["total_cat"] = len(categories)
+    return_args["total_prod"] = len(products)
+
+    return render_template(
+        "reports.jinja",
+        extras=return_args,
+        title="Reports",
+        link=VIEWS
+    )
+
 with app.app_context():
     app.init_db()

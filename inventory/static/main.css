@@ -137,3 +137,15 @@ h5{
     float: left;
     width: 50%;
 }
+
+.bar{
+    display: block;
+    height: 25px;
+}
+.cost {
+    background-color: #ff0000;
+}
+
+.revenue {
+    background-color: #008000;
+}
