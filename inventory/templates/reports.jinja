@@ -3,22 +3,33 @@
     <div class="container" align="center">
     <h3 align="center">Reports</h3>
     <hr>
-    <script>console.log({{ extras|tojson }})</script>
     {% set total_cost = extras["total_cost"]|float %}
     {% set total_net = extras["total_net"]|float %}
 
     {% if total_cost > total_net  %}
         {% set gain_loss = "Loss" %}
         {% set gl_amount = total_cost - total_net %}
-        {% set gl_color = "#D40000" %}
+        {% set gl_color = "cost" %}
     {% elif total_cost < total_net %}
         {% set gain_loss = "Gain" %}
         {% set gl_amount = total_net - total_cost %} 
-        {% set gl_color = "#217821"%}
+        {% set gl_color = "revenue"%}
     {% endif %}
 
+    <div id="chart" align="center">
+    <h4 align="center">At a Glance</h4>
+    <table class="chart">
+        <tr>
+            <td>Cost:</td><td><span class="cost bar" style="width:{{ extras['cost_span'] }}px;"></span></td>
+        </tr>
+        <tr>
+            <td>Revenue:</td><td><span class="revenue bar" style="width:{{ extras['net_span'] }}px;"></span></td>
+        </tr>
+    </table>
+    </div>
     <div class="right">
-    <table>
+    <h4 align="center">Inventory Summary</h4>
+    <table id="totals" class="summary-table">
         <tr>
             <td>Total Categories:</td><td>{{ extras["total_cat"] }}</td>
         </tr>
@@ -37,26 +48,19 @@
     </table>
     </div>
     <div class="left">
-    <table>
+    <h4 align="center">Costs and Potential Revenue</h4>
+    <table id="breakeven" class="summary-table">
         <tr>
-            <td>Total Cost of Inventory:</td><td>${{ extras["total_cost"] }}</td>
+            <td>Total Cost of Inventory:</td><td>{{ "${:,.2f}".format(extras["total_cost"]) }}</td>
         </tr>
         <tr>
-            <td>Total Potential Revenue:</td><td>${{ extras["total_net"]}}</td>
+            <td>Potential Revenue:</td><td>{{ "${:,.2f}".format(extras["total_net"]) }}</td>
         </tr>
         <tr>
-            <td>Total {{ gain_loss }}: </td><td><span style="font-weight:bold; color:{{ gl_color }}">${{ gl_amount|round }}</span></td>
-        </tr>
-    </table>
-    <table class="chart">
-        <tr>
-            <td>Cost:</td><td><span class="cost bar" style="width:{{ extras['cost_span'] }}px;"></span></td>
-        </tr>
-        <tr>
-            <td>Revenue:</td><td><span class="revenue bar" style="width:{{ extras['net_span'] }}px;"></span></td>
+            <td>Total {{ gain_loss }}: </td><td><span class="gl-text {{ gl_color }}">{{ "${:,.2f}".format(gl_amount) }}</span></td>
         </tr>
     </table>
     </div>
-
+</div>
 
 {% endblock %}
