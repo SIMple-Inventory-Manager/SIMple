@@ -35,7 +35,7 @@
     </div>
     <div class="container" style="float: contour;" align="center">
     <h3 align="center">Inventory</h3>
-    <h6 align="center">{{amount }} Products Shown</h6>
+    <h6 align="center">{{ extras["amount"] }} Products Shown</h6>
     <hr>
         <div class="form-horizontal" title="Item list">
         {% if not products %}
@@ -90,7 +90,7 @@
 
                 <div id="edit_{{ prod_id }}" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="trans_message" aria-hidden="true">
                 <div class="modal-dialog" role="document">
-                    <div class="modal-content">
+                    <div class="modal-content new-item">
                     <div id="tr-close">
                         <button class="btn" style="float: right" data-dismiss="modal">X</button>
                     </div>

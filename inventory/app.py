@@ -157,7 +157,6 @@ def pull_current():
 
 def quick_filter(request):
     filter_type = request.args.get("filter")
-    location, categories, products = pull_current()
 
     return_args = {}
 
@@ -230,6 +229,7 @@ def summary():
                 else:
                     return redirect(VIEWS["Summary"])
 
+    return_args["amount"] = len(products)
 
     return render_template(
         "index.jinja",
@@ -309,12 +309,16 @@ def product():
                 add_new(request)
                 return redirect(VIEWS["Stock"])
             case "filter":
-                prod_filter = request.form["location-filter"]
-                cat_filter = request.form["category-filter"]
-                if prod_filter != "0" or cat_filter != "0":
+                filter_type = request.args.get("filter")
+                if filter_type == "upc_search":
                     return_args, products = quick_filter(request)
-                else:
-                    return redirect(VIEWS["Stock"])
+                elif filter_type == "loc_cat":
+                    prod_filter = request.form["location-filter"]
+                    cat_filter = request.form["category-filter"]
+                    if prod_filter != "0" or cat_filter != "0":
+                        return_args, products = quick_filter(request)
+                    else:
+                        return redirect(VIEWS["Stock"])
             case _:
                 return redirect(VIEWS["Stock"])
 
