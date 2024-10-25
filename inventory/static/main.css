@@ -137,3 +137,32 @@ h5{
     float: left;
     width: 50%;
 }
+
+.gl-text{
+    font-weight: bold;
+}
+
+.gl-text.cost{
+    color:#ff0000;
+}
+.gl-text.revenue{
+    color: #008000;
+}
+.bar{
+    display: block;
+    height: 1.2em;
+}
+.bar.cost {
+    background-color: #ff0000;
+}
+
+.bar.revenue {
+    background-color: #008000;
+}
+.summary-table td{
+    width:max-content;
+}
+
+#chart{
+    margin-bottom: 10px;
+}
