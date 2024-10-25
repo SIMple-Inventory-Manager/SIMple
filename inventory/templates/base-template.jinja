@@ -61,6 +61,13 @@
                 </div>
                 {% endfor %}
             </div>
+            {% if not current_user %}
+            <a class="navbar" href="#login-window">Login</a>
+            <div id="login-window"><form action="{{ url_for('login') }}" method="POST"><input name="user-id" placeholder="User ID"></form></div>
+            {% else %}
+            <div><a class="nav-bar" href="#logout-window">Hello, {{ current_user.name }}</a></div>
+            <div id="logout-window"><button action="{{ url_for('logout') }}">Logout</button></div>
+            {% endif %}
 	    </nav>
         {% block content %}
         {% endblock %}

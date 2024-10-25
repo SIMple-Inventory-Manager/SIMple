@@ -6,21 +6,18 @@ from collections import defaultdict
 from pathlib import Path
 
 # imports - third party imports
-from flask import Flask, redirect, render_template, request
+from flask import Flask, redirect, render_template, request, session
+import flask_login
 
 DATABASE_NAME = "inventory.sqlite"
 _DATABASE_PATH = Path(__file__).parent.parent / DATABASE_NAME
-VIEWS = {
-    "Summary": "/",
-    "Stock": "/product",
-    "Locations": "/location",
-    "Settings": "/settings"
-}
+
 EMPTY_SYMBOLS = {"-", "", " ", None}
 
-VERSION = "0.2.2"
+VERSION = "0.3.0"
 
 app = Flask(__name__)
+app.secret_key = os.urandom(24)
 
 if os.environ.get("FLASK_DEBUG") == "1":
     app.config.update(TEMPLATES_AUTO_RELOAD=True)
@@ -28,6 +25,57 @@ if os.environ.get("FLASK_DEBUG") == "1":
 else:
     DATABASE_NAME = os.environ.get("DATABASE_NAME") or _DATABASE_PATH.resolve()
 
+login_manager = flask_login.LoginManager()
+login_manager.init_app(app)
+
+class User(flask_login.UserMixin):
+    def __init__(self,
+             user_id,
+             user_name,
+             access_level,
+             active
+             ):
+        self.user_id = user_id
+        self.user_name = user_name
+        self.access_level = access_level
+        self.active = active
+    
+    def is_active(self):
+        return bool(self.active)
+    def is_authenticated(self):
+        return True
+    def anon_user(self, anon):
+        self.is_anonymous = anon
+    def get_id(self):
+        return str(self.user_id)
+
+@login_manager.user_loader
+def user_loader(user):
+    with sqlite3.connect(DATABASE_NAME) as conn:
+       user_id, user_name, access, active = conn.execute("SELECT * FROM user WHERE user_id = ?", (user)).fetchone()
+    return User(user_id, user_name, access, active)
+    
+if not flask_login.current_user:
+    ACCESS_LEVEL = 4
+else:
+    ACCESS_LEVEL = get_access()
+if ACCESS_LEVEL <= 2:
+    VIEWS = {
+        "Summary": "/",
+        "Stock": "/product",
+        "Locations": "/location",
+        "Settings": "/settings"
+    }
+elif ACCESS_LEVEL <= 3:
+    VIEWS = {
+        "Summary": "/",
+        "Stock": "/product",
+        "Locations": "/location"
+    }
+else:
+    VIEWS = {
+        "Summary": "/"
+    }
 
 def init_database():
     PRODUCTS = (
@@ -81,10 +129,28 @@ def init_database():
         "setting_name TEXT NOT NULL, "
         "setting_val INTEGER NOT NULL) "
         )
+    USER_ACCESS = (
+        "access("
+        "access_id INTEGER PRIMARY KEY AUTOINCREMENT, "
+        "access_name TEXT NOT NULL) "
+    )
+    USERS = (
+        "user("
+        "user_id INTEGER PRIMARY KEY AUTOINCREMENT, "
+        "user_name TEXT NOT NULL, "
+        "access_level INTEGER NOT NULL, "
+        "active INTEGER INTEGER NOT NULL, "
+        "FOREIGN KEY(access_level) REFERENCES access(access_id))"
+    )
 
     with sqlite3.connect(DATABASE_NAME) as conn:
-        for table_definition in [PRODUCTS, LOCATIONS, LOGISTICS, CATEGORIES, SET_CATEGORIES, SETTINGS]:
+        for table_definition in [PRODUCTS, LOCATIONS, LOGISTICS, CATEGORIES, SET_CATEGORIES, SETTINGS, USER_ACCESS, USERS]:
             conn.execute(f"CREATE TABLE IF NOT EXISTS {table_definition}")
+        access_levels = conn.execute("SELECT * FROM access").fetchall()
+        if len(access_levels) < 3:
+            for level, name in [(1, "Admin"), (2, "Manager"), (3, "Supervisor"), (4, "Employee")]:
+                conn.execute("INSERT INTO access (access_id, access_name) VALUES (?, ?)", (level, name))
+
 
 app.init_db = init_database
 
@@ -154,6 +220,12 @@ def pull_current():
         products = products = conn.execute("SELECT * FROM products ORDER BY prod_name ASC").fetchall()
 
     return location, categories, products
+
+def pull_extras():
+    with sqlite3.connect(DATABASE_NAME) as conn:
+        users = conn.execute("SELECT * FROM user").fetchall()
+        access_level = conn.execute("SELECT * FROM access").fetchall()
+    return users, access_level
 
 def quick_filter(request):
     filter_type = request.args.get("filter")
@@ -529,6 +601,13 @@ def delete():
                         "DELETE FROM category WHERE cat_id = ?", (cat_id)
                         )
                 return redirect(VIEWS["Settings"])
+            
+            case "user":
+                user_id = request.args.get("user-id")
+                if user_id:
+                    conn.execute("DELETE FROM user WHERE user_id = ?", (user_id))
+                return redirect(VIEWS["Settings"])
+            
             case _:
                 return redirect(VIEWS["Summary"])
 
@@ -661,7 +740,6 @@ def edit():
                                             transaction_message=f"Unable to change {name}. Value '{value}' is invalid.",
                                             previous=VIEWS["Stock"]
                                         )
-                changes_queue = {}
 
                 for column in vars(prod).keys():
                     value = vars(prod)[column]
@@ -698,15 +776,24 @@ def help_page():
         )
 
 @app.route("/settings", methods=["GET"])
-def settings_page():
+def settings():
     locations, categories, _ = pull_current()
 
+    employees, access_levels = pull_extras()
+
+    return_args = {}
+    return_args["user-access"] = ACCESS_LEVEL
+    return_args["next-id"] = len(employees)+1
+    
     return render_template(
         "settings.jinja",
         link=VIEWS,
         title="Settings",
+        extras=return_args,
         categories=categories,
-        locations=locations
+        locations=locations,
+        users=employees,
+        access=access_levels
         )
 @app.route("/categories", methods=["POST"])
 def categories():
@@ -719,6 +806,53 @@ def categories():
                 return redirect(VIEWS["Settings"])
 
     return redirect(VIEWS["Settings"])
+
+@app.route("/users", methods=["POST"])
+def users():
+    def update_db(user_id, column, value):
+        conn.execute(f"UPDATE user SET {column} = ? WHERE user_id = ?",
+                    (value, user_id),
+                     )
+    user_mod_type = request.args.get("type")
+    with sqlite3.connect(DATABASE_NAME) as conn:
+        new_user = User(
+                request.form["user-id"],
+                request.form["user-name"],
+                request.form["access"],
+                request.form["active"]
+        )
+        if new_user.active == "on":
+            new_user.active = 1
+        elif new_user.active == "off":
+            new_user.active = 0
+
+        match user_mod_type:
+            case "create":
+                if new_user.user_id != "":
+                    conn.execute("INSERT INTO user (user_id, user_name, access_level, active) VALUES (?, ?, ?, ?)", (new_user.user_id, new_user.user_name, new_user.access_level, new_user.active))
+                else:
+                    conn.execute("INSERT INTO user (user_name, access_level, active) VALUES (?, ?, ?)", (new_user.user_name, new_user.access_level, new_user.active))
+
+            case "edit":
+                for column in vars(new_user).keys():
+                    value = vars(new_user)[column]
+                    if value not in EMPTY_SYMBOLS and column != 'user_id':
+                        update_db(new_user.user_id, column, value)
+    return redirect(VIEWS["Settings"])
+
+@app.route("/login", methods=["POST"])
+def login():
+    user_id = request.form["user-id"]
+    user = user_loader(user_id)
+    flask_login.login_user(user, remember=True)
+    
+    return redirect(VIEWS["Summary"])
+
+@app.route("/logout", methods=["POST"])
+def logout():
+    flask_login.logout_user()
+
+    return redirect(VIEWS["Summary"])
 
 with app.app_context():
     app.init_db()

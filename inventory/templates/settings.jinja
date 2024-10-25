@@ -12,7 +12,7 @@
                 <tr>
                     <td>{{cat_name}}</td>
                     <td> <a href="{{ url_for('delete', cat_id=cat_id, type='category') }}">
-                        <button name="button" type="button" class="btn btn-danger" value="delete">delete</button><br>
+                        <button name="button" type="button" class="btn btn-danger" value="delete">delete</button>
                     </a>
                     </td>
                     <td>
@@ -48,5 +48,118 @@
                 <button type="submit" class="btn btn-success">filter</button>
             </form>
         </div>
+    {% if extras["user-access"] and extras["user-access"]|int <= 2 %}
+        <div id="user-settings" class="left">
+            <h5>Users</h5>
+            <div name="create-button" style="float: inline-right;" align="right">
+                <button class="btn btn-success" value="create" data-toggle="modal" data-target="#create">add new</button>
+                <div id="create" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="trans_message" aria-hidden="true">
+                    <form action = "{{ url_for('users', type='create') }}" method = "POST">
+                        <div class="modal-dialog" role="document">
+                        <div class="modal-content new-item">
+                        <div id="tr-close">
+                            <button class="btn" style="float: right" data-dismiss="modal">X</button>
+                        </div>
+                        <h3 align="center">Add User</h3>
+                        <div class="modal-body" align="left">
+                        <table id="create-item">
+                            <tr>
+                                <td>User Name:<span class="required">*</span></td><td><input name="user-name" placeholder="Name of User" required></td>
+                            </tr>
+                                <td>User ID:</td><td><input name="user-id" placeholder="{{ extras['next-id'] }}"></td>
+                            <tr>
+                                <td>Level of Access:<span class="required">*</span></td><td>
+                                    <select name="access" required>
+                                        <option value="-">Select One</option>
+                                        {% for access_id, access_type in access %}
+                                        <option value="{{ access_id }}">{{ access_type }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Active:</td><td><input type="checkbox" name="active" checked></td>
+                            </tr>
+                        </table>
+                        </div>
+                        <div class="modal-footer">
+                            <span id="modal-disclaimer">Items marked with asterisk (<span class="required">*</span>) are required</span>
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                            <button type="submit" class="btn btn-primary">Create</button>
+                        </div>
+                    </form>
+                    </div>
+                </div>
+                </div>
+            </div>  
+            {% if not users %}
+                No users available
+            {% else %}
+            <table class="table small-table">
+                <th>User Name</th><th>Access Level</th><th>Active</th><th></th><th></th>
+                {% for user_id, name, access_level, active in users %}
+                    {% set ns = namespace (level = "" ) %}
+                    {% if active|int == 1 %}
+                        {% set active = "Active" %}
+                        {% set active_box = "Checked" %}
+                    {% elif active|int == 0 %}
+                        {% set active = "Inactive" %}
+                        {% set active_box = "" %}
+                    {% endif %}
+                    {% for access_id, access_type in access %}
+                        {% if access_level|int == access_id|int %}
+                            {% set ns.level = access_type %}
+                        {% endif %}
+                    {% endfor %}
+                <tr>
+                    <td>{{ name }}</td><td>{{ ns.level }}</td><td>{{ active }}</td><td><a href="{{ url_for('delete', user_id=user_id, type='user') }}">
+                        <button name="button" type="button" class="btn btn-danger" value="delete">delete</button>
+                    </a></td><td><button name="button" type="button" class="btn btn-success" value= "edit" data-toggle="modal" data-target="#edit_{{ user_id }}" >edit</button>
+                    <div id="edit_{{ user_id }}" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="trans_message" aria-hidden="true">
+                    <form action = "{{ url_for('users', type='edit') }}" method = "POST">
+                        <div class="modal-dialog" role="document">
+                        <div class="modal-content new-item">
+                        <div id="tr-close">
+                            <button class="btn" style="float: right" data-dismiss="modal">X</button>
+                        </div>
+                        <h3 align="center">Edit User</h3>
+                        <div class="modal-body" align="left">
+                        <table id="create-item">
+                            <tr>
+                                <td>User Name:</td><td><input name="user-name" placeholder="{{ name }}"></td>
+                            </tr>
+                            <tr>
+                                <td>Level of Access:</td><td>
+                                    <select name="access">
+                                        <option value="-">{{ ns.level }}</option>
+                                        
+                                        {% for access_id, access_type in access %}
+                                            {% if ns.level != access_type %}
+                                        <option value="{{ access_id }}">{{ access_type }}</option>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Active:</td><td><input type="checkbox" name="active" {{ active_box }}></td>
+                            </tr>
+                        </table>
+                        </div>
+                        <div class="modal-footer">
+                            <input name="user-id"  value="{{ user_id }}" hidden>
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                            <button type="submit" class="btn btn-primary">edit</button>
+                        </div>r
+                    </form>
+                    </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </table>
+            {% endif %} 
+        </div>
+
+    {% endif %}
 </div>
 {% endblock %}
